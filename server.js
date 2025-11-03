@@ -17,13 +17,14 @@ const cleanUnicode = (text) => {
   if (!text) return text;
   if (typeof text !== 'string') return text;
   
-  let cleaned = text;
-  // Remove all characters > 127 (only keep basic ASCII)
-  cleaned = cleaned.replace(/[^\x00-\x7F]/g, '');
-  // Normalize line endings
+  // Convert to buffer and back to remove problematic characters
+  let cleaned = Buffer.from(text, 'utf8').toString('ascii', 0, text.length);
+  
+  // Additional cleaning
+  cleaned = cleaned.replace(/[^\x20-\x7E\n\r\t]/g, ''); // Only printable ASCII + newlines/tabs
   cleaned = cleaned.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-  // Remove multiple spaces
   cleaned = cleaned.replace(/  +/g, ' ');
+  cleaned = cleaned.trim();
   
   return cleaned;
 };
@@ -184,23 +185,31 @@ app.post('/api/analyze-sow/openai', async (req, res) => {
     // Clean the prompt to remove any Unicode characters
     prompt = cleanUnicode(prompt);
 
+    // Build the request body
+    const requestBody = {
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      max_tokens: 1024,
+      temperature: 0.1
+    };
+
+    // Convert to JSON and clean it one more time
+    let bodyString = JSON.stringify(requestBody);
+    bodyString = bodyString.replace(/[\u2028\u2029]/g, '\\n');
+    bodyString = bodyString.replace(/[^\x20-\x7E\n\r\t{}[\]":,\-\.0-9]/g, '');
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        max_tokens: 1024,
-        temperature: 0.1
-      })
+      body: bodyString
     });
 
     if (!response.ok) {
@@ -351,23 +360,31 @@ app.post('/api/compare-project/openai', async (req, res) => {
     // Clean the prompt to remove Unicode characters
     prompt = cleanUnicode(prompt);
 
+    // Build the request body
+    const requestBody = {
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      max_tokens: 1024,
+      temperature: 0.1
+    };
+
+    // Convert to JSON and clean it one more time
+    let bodyString = JSON.stringify(requestBody);
+    bodyString = bodyString.replace(/[\u2028\u2029]/g, '\\n');
+    bodyString = bodyString.replace(/[^\x20-\x7E\n\r\t{}[\]":,\-\.0-9]/g, '');
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        max_tokens: 1024,
-        temperature: 0.1
-      })
+      body: bodyString
     });
 
     if (!response.ok) {
