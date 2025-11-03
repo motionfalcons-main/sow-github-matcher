@@ -163,6 +163,9 @@ app.post('/api/analyze-sow/openai', async (req, res) => {
       return res.status(500).json({ error: 'OpenAI API key not configured' });
     }
 
+    // Ensure API key is clean (trim only, don't alter)
+    const cleanApiKey = apiKey.trim();
+
     // Build prompt with array join to avoid any hidden Unicode
     const promptParts = [
       'Analyze this Statement of Work and extract key requirements in JSON format:',
@@ -199,7 +202,7 @@ app.post('/api/analyze-sow/openai', async (req, res) => {
       temperature: 0.1
     }, {
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        'Authorization': `Bearer ${cleanApiKey}`,
         'Content-Type': 'application/json'
       }
     });
@@ -310,6 +313,9 @@ app.post('/api/compare-project/openai', async (req, res) => {
       return res.status(500).json({ error: 'OpenAI API key not configured' });
     }
 
+    // Ensure API key is clean (trim only, don't alter)
+    const cleanApiKey = apiKey.trim();
+
     // Project data is already cleaned by middleware
     const cleanProject = project;
 
@@ -357,7 +363,7 @@ app.post('/api/compare-project/openai', async (req, res) => {
       temperature: 0.1
     }, {
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        'Authorization': `Bearer ${cleanApiKey}`,
         'Content-Type': 'application/json'
       }
     });
