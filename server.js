@@ -163,16 +163,8 @@ app.post('/api/analyze-sow/openai', async (req, res) => {
       return res.status(500).json({ error: 'OpenAI API key not configured' });
     }
 
-    // Ensure API key is clean - remove ANY non-ASCII characters that might corrupt the header
-    const cleanApiKey = apiKey
-      .trim()
-      .replace(/[^\x20-\x7E]/g, '')  // Only ASCII printable
-      .replace(/\s/g, '');  // Remove whitespace
-    
-    if (!cleanApiKey || cleanApiKey.length < 20) {
-      console.error('Invalid API key after cleaning. Original length:', apiKey.length, 'Cleaned:', cleanApiKey.length);
-      return res.status(500).json({ error: 'API key is invalid or corrupted in environment' });
-    }
+    // Only trim the API key, do NOT clean it - just remove whitespace
+    const trimmedApiKey = apiKey.trim();
 
     // Build prompt with array join to avoid any hidden Unicode
     const promptParts = [
@@ -210,7 +202,7 @@ app.post('/api/analyze-sow/openai', async (req, res) => {
       temperature: 0.1
     }, {
       headers: {
-        'Authorization': `Bearer ${cleanApiKey}`,
+        'Authorization': `Bearer ${trimmedApiKey}`,
         'Content-Type': 'application/json'
       }
     });
@@ -321,16 +313,8 @@ app.post('/api/compare-project/openai', async (req, res) => {
       return res.status(500).json({ error: 'OpenAI API key not configured' });
     }
 
-    // Ensure API key is clean - remove ANY non-ASCII characters
-    const cleanApiKey = apiKey
-      .trim()
-      .replace(/[^\x20-\x7E]/g, '')
-      .replace(/\s/g, '');
-    
-    if (!cleanApiKey || cleanApiKey.length < 20) {
-      console.error('Invalid API key in compare-project');
-      return res.status(500).json({ error: 'API key is invalid or corrupted in environment' });
-    }
+    // Only trim the API key, do NOT clean it
+    const trimmedApiKey = apiKey.trim();
 
     // Project data is already cleaned by middleware
     const cleanProject = project;
@@ -379,7 +363,7 @@ app.post('/api/compare-project/openai', async (req, res) => {
       temperature: 0.1
     }, {
       headers: {
-        'Authorization': `Bearer ${cleanApiKey}`,
+        'Authorization': `Bearer ${trimmedApiKey}`,
         'Content-Type': 'application/json'
       }
     });
