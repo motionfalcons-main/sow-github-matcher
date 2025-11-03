@@ -84,21 +84,27 @@ app.post('/api/analyze-sow/claude', async (req, res) => {
       return res.status(500).json({ error: 'Claude API key not configured' });
     }
 
-    const prompt = `Analyze this Statement of Work and extract key requirements in JSON format:
-
-SOW Content:
-${sowContent}
-
-Return ONLY valid JSON with this exact structure:
-{
-  "projectType": "brief project description",
-  "mainFeatures": ["feature1", "feature2", "feature3", "feature4"],
-  "technologies": ["tech1", "tech2", "tech3"],
-  "complexity": "low/medium/high",
-  "domain": "industry or domain",
-  "estimatedTimeline": "estimated time to complete",
-  "keyRequirements": ["requirement1", "requirement2"]
-}`;
+    // Build prompt with array join to avoid hidden Unicode
+    const promptParts = [
+      'Analyze this Statement of Work and extract key requirements in JSON format:',
+      '',
+      'SOW Content:',
+      sowContent,
+      '',
+      'Return ONLY valid JSON with this exact structure:',
+      '{',
+      '  "projectType": "brief project description",',
+      '  "mainFeatures": ["feature1", "feature2", "feature3", "feature4"],',
+      '  "technologies": ["tech1", "tech2", "tech3"],',
+      '  "complexity": "low/medium/high",',
+      '  "domain": "industry or domain",',
+      '  "estimatedTimeline": "estimated time to complete",',
+      '  "keyRequirements": ["requirement1", "requirement2"]',
+      '}'
+    ];
+    
+    let prompt = promptParts.join('\n');
+    prompt = cleanUnicode(prompt);
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -155,22 +161,26 @@ app.post('/api/analyze-sow/openai', async (req, res) => {
       return res.status(500).json({ error: 'OpenAI API key not configured' });
     }
 
-    let prompt = `Analyze this Statement of Work and extract key requirements in JSON format:
-
-SOW Content:
-${sowContent}
-
-Return ONLY valid JSON with this exact structure:
-{
-  "projectType": "brief project description",
-  "mainFeatures": ["feature1", "feature2", "feature3", "feature4"],
-  "technologies": ["tech1", "tech2", "tech3"],
-  "complexity": "low/medium/high",
-  "domain": "industry or domain",
-  "estimatedTimeline": "estimated time to complete",
-  "keyRequirements": ["requirement1", "requirement2"]
-}`;
-
+    // Build prompt with array join to avoid any hidden Unicode
+    const promptParts = [
+      'Analyze this Statement of Work and extract key requirements in JSON format:',
+      '',
+      'SOW Content:',
+      sowContent,
+      '',
+      'Return ONLY valid JSON with this exact structure:',
+      '{',
+      '  "projectType": "brief project description",',
+      '  "mainFeatures": ["feature1", "feature2", "feature3", "feature4"],',
+      '  "technologies": ["tech1", "tech2", "tech3"],',
+      '  "complexity": "low/medium/high",',
+      '  "domain": "industry or domain",',
+      '  "estimatedTimeline": "estimated time to complete",',
+      '  "keyRequirements": ["requirement1", "requirement2"]',
+      '}'
+    ];
+    
+    let prompt = promptParts.join('\n');
     // Clean the prompt to remove any Unicode characters
     prompt = cleanUnicode(prompt);
 
@@ -310,30 +320,34 @@ app.post('/api/compare-project/openai', async (req, res) => {
     // Project data is already cleaned by middleware
     const cleanProject = project;
 
-    let prompt = `Compare this GitHub project with the SOW requirements and provide compatibility analysis:
-
-SOW Requirements:
-${JSON.stringify(sowAnalysis, null, 2)}
-
-GitHub Project:
-Name: ${cleanProject.name}
-Description: ${cleanProject.description}
-README: ${cleanProject.readme}
-Language: ${cleanProject.language}
-Stars: ${cleanProject.stars}
-
-Analyze and return ONLY valid JSON:
-{
-  "compatibilityScore": 0-100 (number),
-  "matchingFeatures": ["feature1", "feature2"],
-  "missingFeatures": ["feature1", "feature2"],
-  "technologyAlignment": "high/medium/low",
-  "strengths": ["strength1", "strength2"],
-  "weaknesses": ["weakness1", "weakness2"],
-  "recommendation": "brief recommendation text",
-  "effortToAdapt": "low/medium/high"
-}`;
-
+    // Build prompt with array join to avoid hidden Unicode
+    const promptParts = [
+      'Compare this GitHub project with the SOW requirements and provide compatibility analysis:',
+      '',
+      'SOW Requirements:',
+      JSON.stringify(sowAnalysis, null, 2),
+      '',
+      'GitHub Project:',
+      'Name: ' + cleanProject.name,
+      'Description: ' + cleanProject.description,
+      'README: ' + cleanProject.readme,
+      'Language: ' + cleanProject.language,
+      'Stars: ' + cleanProject.stars,
+      '',
+      'Analyze and return ONLY valid JSON:',
+      '{',
+      '  "compatibilityScore": 0-100 (number),',
+      '  "matchingFeatures": ["feature1", "feature2"],',
+      '  "missingFeatures": ["feature1", "feature2"],',
+      '  "technologyAlignment": "high/medium/low",',
+      '  "strengths": ["strength1", "strength2"],',
+      '  "weaknesses": ["weakness1", "weakness2"],',
+      '  "recommendation": "brief recommendation text",',
+      '  "effortToAdapt": "low/medium/high"',
+      '}'
+    ];
+    
+    let prompt = promptParts.join('\n');
     // Clean the prompt to remove Unicode characters
     prompt = cleanUnicode(prompt);
 
