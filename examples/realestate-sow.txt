@@ -1,0 +1,18 @@
+Project: Real Estate Property Management Platform
+
+Requirements:
+- Property listing and search functionality
+- Virtual tour integration (360° photos)
+- Tenant and landlord portals
+- Rent payment processing
+- Maintenance request system
+- Document management and e-signatures
+- Financial reporting and analytics
+- Mobile app for tenants
+- Integration with MLS systems
+- Automated rent reminders
+
+Technologies: Vue.js, Node.js, MySQL, AWS, Twilio
+
+Timeline: 5-7 months
+Budget: $60,000

@@ -1,0 +1,16 @@
+Project: E-commerce Mobile App
+
+Requirements:
+- User authentication and profile management
+- Product catalog with search and filtering
+- Shopping cart and checkout functionality
+- Payment processing integration (Stripe/PayPal)
+- Order tracking and history
+- Push notifications for promotions
+- Admin dashboard for inventory management
+- Mobile responsive design (iOS/Android)
+
+Technologies: React Native, Node.js, MongoDB, Stripe API
+
+Timeline: 6-8 months
+Budget: $50,000

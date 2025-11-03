@@ -1,0 +1,19 @@
+services:
+  # Single service - Backend serves Frontend
+  - type: web
+    name: sow-github-matcher
+    runtime: node
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: node server.js
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: CLAUDE_API_KEY
+        sync: false
+      - key: PORT
+        value: 10000
+      - key: NODE_ENV
+        value: production
+    healthCheckPath: /api/health
+

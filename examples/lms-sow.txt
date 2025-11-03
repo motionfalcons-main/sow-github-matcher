@@ -1,0 +1,18 @@
+Project: AI-Powered Learning Management System
+
+Requirements:
+- Course creation and management tools
+- AI-powered content recommendations
+- Student progress tracking and analytics
+- Interactive quizzes and assessments
+- Video streaming and content delivery
+- Discussion forums and collaboration tools
+- Mobile app for students
+- Integration with external learning resources
+- Automated grading system
+- Certificate generation
+
+Technologies: Python/Django, React, PostgreSQL, AWS S3, TensorFlow
+
+Timeline: 4-6 months
+Budget: $75,000
