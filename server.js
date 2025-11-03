@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import axios from 'axios';
 
 dotenv.config();
 
@@ -185,8 +186,8 @@ app.post('/api/analyze-sow/openai', async (req, res) => {
     // Clean the prompt to remove any Unicode characters
     prompt = cleanUnicode(prompt);
 
-    // Build the request body
-    const requestBody = {
+    // Use axios which handles encoding better than fetch
+    const response = await axios.post('https://api.openai.com/v1/chat/completions', {
       model: 'gpt-4o',
       messages: [
         {
@@ -196,32 +197,14 @@ app.post('/api/analyze-sow/openai', async (req, res) => {
       ],
       max_tokens: 1024,
       temperature: 0.1
-    };
-
-    // Convert to JSON and clean it one more time
-    let bodyString = JSON.stringify(requestBody);
-    bodyString = bodyString.replace(/[\u2028\u2029]/g, '\\n');
-    bodyString = bodyString.replace(/[^\x20-\x7E\n\r\t{}[\]":,\-\.0-9]/g, '');
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
+    }, {
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
-      },
-      body: bodyString
+      }
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      return res.status(response.status).json({ 
-        error: `OpenAI API error: ${response.status}`, 
-        details: error 
-      });
-    }
-
-    const data = await response.json();
-    let analysisText = data.choices[0].message.content;
+    let analysisText = response.data.choices[0].message.content;
     
     // Remove markdown code blocks if present
     analysisText = analysisText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
@@ -231,7 +214,8 @@ app.post('/api/analyze-sow/openai', async (req, res) => {
     res.json(analysis);
   } catch (error) {
     console.error('OpenAI SOW Analysis Error:', error);
-    res.status(500).json({ error: error.message });
+    const errorMsg = error.response?.data?.error?.message || error.message;
+    res.status(error.response?.status || 500).json({ error: errorMsg });
   }
 });
 
@@ -360,8 +344,8 @@ app.post('/api/compare-project/openai', async (req, res) => {
     // Clean the prompt to remove Unicode characters
     prompt = cleanUnicode(prompt);
 
-    // Build the request body
-    const requestBody = {
+    // Use axios which handles encoding better
+    const response = await axios.post('https://api.openai.com/v1/chat/completions', {
       model: 'gpt-4o',
       messages: [
         {
@@ -371,32 +355,14 @@ app.post('/api/compare-project/openai', async (req, res) => {
       ],
       max_tokens: 1024,
       temperature: 0.1
-    };
-
-    // Convert to JSON and clean it one more time
-    let bodyString = JSON.stringify(requestBody);
-    bodyString = bodyString.replace(/[\u2028\u2029]/g, '\\n');
-    bodyString = bodyString.replace(/[^\x20-\x7E\n\r\t{}[\]":,\-\.0-9]/g, '');
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
+    }, {
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
-      },
-      body: bodyString
+      }
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      return res.status(response.status).json({ 
-        error: `OpenAI API error: ${response.status}`, 
-        details: error 
-      });
-    }
-
-    const data = await response.json();
-    let comparisonText = data.choices[0].message.content;
+    let comparisonText = response.data.choices[0].message.content;
     
     // Remove markdown code blocks if present
     comparisonText = comparisonText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
@@ -406,7 +372,8 @@ app.post('/api/compare-project/openai', async (req, res) => {
     res.json(comparison);
   } catch (error) {
     console.error('OpenAI Project Comparison Error:', error);
-    res.status(500).json({ error: error.message });
+    const errorMsg = error.response?.data?.error?.message || error.message;
+    res.status(error.response?.status || 500).json({ error: errorMsg });
   }
 });
 
