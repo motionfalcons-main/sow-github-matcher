@@ -32,6 +32,30 @@ const cleanUnicode = (text) => {
 app.use(cors());
 app.use(express.json());
 
+// Middleware to clean all incoming request bodies from Unicode
+app.use((req, res, next) => {
+  if (req.body) {
+    // Recursively clean all string values in the request body
+    const cleanObject = (obj) => {
+      if (typeof obj === 'string') {
+        return cleanUnicode(obj);
+      } else if (Array.isArray(obj)) {
+        return obj.map(cleanObject);
+      } else if (obj !== null && typeof obj === 'object') {
+        const cleaned = {};
+        for (const key in obj) {
+          cleaned[key] = cleanObject(obj[key]);
+        }
+        return cleaned;
+      }
+      return obj;
+    };
+    
+    req.body = cleanObject(req.body);
+  }
+  next();
+});
+
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
   const distPath = path.join(__dirname, 'dist');
@@ -47,14 +71,13 @@ app.get('/api/health', (req, res) => {
 // Analyze SOW with Claude
 app.post('/api/analyze-sow/claude', async (req, res) => {
   try {
-    let { sowContent } = req.body;
+    const { sowContent } = req.body;
     
     if (!sowContent) {
       return res.status(400).json({ error: 'SOW content is required' });
     }
 
-    // Clean Unicode characters that cause ByteString errors
-    sowContent = cleanUnicode(sowContent);
+    // Content is already cleaned by middleware
 
     const apiKey = process.env.CLAUDE_API_KEY;
     if (!apiKey) {
@@ -119,14 +142,13 @@ Return ONLY valid JSON with this exact structure:
 // Analyze SOW with OpenAI
 app.post('/api/analyze-sow/openai', async (req, res) => {
   try {
-    let { sowContent } = req.body;
+    const { sowContent } = req.body;
     
     if (!sowContent) {
       return res.status(400).json({ error: 'SOW content is required' });
     }
 
-    // Clean Unicode characters that cause ByteString errors
-    sowContent = cleanUnicode(sowContent);
+    // Content is already cleaned by middleware
 
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
@@ -149,9 +171,6 @@ Return ONLY valid JSON with this exact structure:
   "keyRequirements": ["requirement1", "requirement2"]
 }`;
 
-    // Clean the entire prompt to be safe
-    const cleanPrompt = cleanUnicode(prompt);
-
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -163,7 +182,7 @@ Return ONLY valid JSON with this exact structure:
         messages: [
           {
             role: 'user',
-            content: cleanPrompt
+            content: prompt
           }
         ],
         max_tokens: 1024,
@@ -285,14 +304,8 @@ app.post('/api/compare-project/openai', async (req, res) => {
       return res.status(500).json({ error: 'OpenAI API key not configured' });
     }
 
-    // Clean project data using helper function
-    const cleanProject = {
-      ...project,
-      name: cleanUnicode(project.name || ''),
-      description: cleanUnicode(project.description || ''),
-      readme: cleanUnicode(project.readme || ''),
-      language: cleanUnicode(project.language || '')
-    };
+    // Project data is already cleaned by middleware
+    const cleanProject = project;
 
     const prompt = `Compare this GitHub project with the SOW requirements and provide compatibility analysis:
 
@@ -318,9 +331,6 @@ Analyze and return ONLY valid JSON:
   "effortToAdapt": "low/medium/high"
 }`;
 
-    // Clean the entire prompt to remove Unicode characters
-    const cleanPrompt = cleanUnicode(prompt);
-
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -332,7 +342,7 @@ Analyze and return ONLY valid JSON:
         messages: [
           {
             role: 'user',
-            content: cleanPrompt
+            content: prompt
           }
         ],
         max_tokens: 1024,
