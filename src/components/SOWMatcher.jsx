@@ -64,9 +64,16 @@ const SOWMatcher = () => {
     if (file.type === 'text/plain') {
       const reader = new FileReader();
       reader.onload = (e) => {
-        setFileContent(e.target.result);
+        let content = e.target.result;
+        // Remove problematic Unicode characters (line/paragraph separators)
+        content = content.replace(/[\u2028\u2029]/g, '\n');
+        // Remove other non-ASCII whitespace that causes ByteString errors
+        content = content.replace(/[\u00A0\u1680\u2000-\u200B\u202F\u205F\u3000]/g, ' ');
+        // Normalize line endings
+        content = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        setFileContent(content);
       };
-      reader.readAsText(file);
+      reader.readAsText(file, 'UTF-8');
     } else {
       // For PDF and DOCX, we'll simulate content extraction
       setFileContent(`Sample extracted content from ${file.name}:\n\nThis is a simulated extraction of text content from the uploaded file. In a real implementation, you would use libraries like pdf-parse for PDF files or mammoth for DOCX files to extract the actual text content.`);

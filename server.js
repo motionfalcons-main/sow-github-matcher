@@ -18,7 +18,9 @@ app.use(express.json());
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, 'dist')));
+  const distPath = path.join(__dirname, 'dist');
+  console.log(`📁 Serving static files from: ${distPath}`);
+  app.use(express.static(distPath));
 }
 
 // Health check
@@ -29,11 +31,15 @@ app.get('/api/health', (req, res) => {
 // Analyze SOW with Claude
 app.post('/api/analyze-sow/claude', async (req, res) => {
   try {
-    const { sowContent } = req.body;
+    let { sowContent } = req.body;
     
     if (!sowContent) {
       return res.status(400).json({ error: 'SOW content is required' });
     }
+
+    // Clean Unicode characters that cause ByteString errors
+    sowContent = sowContent.replace(/[\u2028\u2029]/g, '\n');
+    sowContent = sowContent.replace(/[\u00A0\u1680\u2000-\u200B\u202F\u205F\u3000]/g, ' ');
 
     const apiKey = process.env.CLAUDE_API_KEY;
     if (!apiKey) {
@@ -98,11 +104,15 @@ Return ONLY valid JSON with this exact structure:
 // Analyze SOW with OpenAI
 app.post('/api/analyze-sow/openai', async (req, res) => {
   try {
-    const { sowContent } = req.body;
+    let { sowContent } = req.body;
     
     if (!sowContent) {
       return res.status(400).json({ error: 'SOW content is required' });
     }
+
+    // Clean Unicode characters that cause ByteString errors
+    sowContent = sowContent.replace(/[\u2028\u2029]/g, '\n');
+    sowContent = sowContent.replace(/[\u00A0\u1680\u2000-\u200B\u202F\u205F\u3000]/g, ' ');
 
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
@@ -328,7 +338,13 @@ Analyze and return ONLY valid JSON:
 if (process.env.NODE_ENV === 'production') {
   app.use((req, res, next) => {
     if (!req.path.startsWith('/api') && req.method === 'GET') {
-      res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+      const indexPath = path.join(__dirname, 'dist', 'index.html');
+      res.sendFile(indexPath, (err) => {
+        if (err) {
+          console.error('Error serving index.html:', err);
+          res.status(500).send('Frontend not built. Run: npm run build');
+        }
+      });
     } else {
       next();
     }
