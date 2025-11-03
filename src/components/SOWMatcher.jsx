@@ -39,19 +39,19 @@ const SOWMatcher = () => {
     window.location.hostname === 'localhost' ? 'http://localhost:3001/api' : '/api'
   );
 
-  // Helper function to clean Unicode characters from text
+  // Helper function to clean Unicode characters from text - only keep basic ASCII
   const cleanText = (text) => {
     if (!text) return text;
+    if (typeof text !== 'string') return text;
+    
     let cleaned = text;
-    // Remove line/paragraph separators
-    cleaned = cleaned.replace(/\u2028/g, '\n');
-    cleaned = cleaned.replace(/\u2029/g, '\n');
-    // Remove zero-width spaces
-    cleaned = cleaned.replace(/[\u200B-\u200D\uFEFF]/g, '');
-    // Replace special spaces with regular space
-    cleaned = cleaned.replace(/[\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]/g, ' ');
-    // Remove any character > 255 (non-Latin-1)
-    cleaned = cleaned.replace(/[^\x00-\xFF]/g, '');
+    // Remove ALL non-ASCII characters (only keep 0-127)
+    cleaned = cleaned.replace(/[^\x00-\x7F]/g, '');
+    // Normalize line endings
+    cleaned = cleaned.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    // Remove multiple consecutive spaces
+    cleaned = cleaned.replace(/  +/g, ' ');
+    
     return cleaned;
   };
 
@@ -81,12 +81,8 @@ const SOWMatcher = () => {
       const reader = new FileReader();
       reader.onload = (e) => {
         let content = e.target.result;
-        // Remove problematic Unicode characters (line/paragraph separators)
-        content = content.replace(/[\u2028\u2029]/g, '\n');
-        // Remove other non-ASCII whitespace that causes ByteString errors
-        content = content.replace(/[\u00A0\u1680\u2000-\u200B\u202F\u205F\u3000]/g, ' ');
-        // Normalize line endings
-        content = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        // Clean all Unicode characters using helper
+        content = cleanText(content);
         setFileContent(content);
       };
       reader.readAsText(file, 'UTF-8');
@@ -640,11 +636,8 @@ Technologies: Python/Node.js backend, React frontend, PostgreSQL database
 Timeline: 3-4 months
 Budget: $15,000`;
 
-    // Clean any Unicode characters
-    sampleContent = sampleContent.replace(/[\u2028\u2029]/g, '\n');
-    sampleContent = sampleContent.replace(/[\u200B-\u200D\uFEFF]/g, '');
-    sampleContent = sampleContent.replace(/[\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]/g, ' ');
-    sampleContent = sampleContent.replace(/[^\x00-\xFF]/g, '');
+    // Clean any Unicode characters using helper
+    sampleContent = cleanText(sampleContent);
 
     setFileContent(sampleContent);
     setGithubKeywords('astrology AI horoscope prediction');

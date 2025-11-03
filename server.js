@@ -12,6 +12,22 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Helper function to aggressively clean Unicode characters
+const cleanUnicode = (text) => {
+  if (!text) return text;
+  if (typeof text !== 'string') return text;
+  
+  let cleaned = text;
+  // Remove all characters > 127 (only keep basic ASCII)
+  cleaned = cleaned.replace(/[^\x00-\x7F]/g, '');
+  // Normalize line endings
+  cleaned = cleaned.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  // Remove multiple spaces
+  cleaned = cleaned.replace(/  +/g, ' ');
+  
+  return cleaned;
+};
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -38,11 +54,7 @@ app.post('/api/analyze-sow/claude', async (req, res) => {
     }
 
     // Clean Unicode characters that cause ByteString errors
-    sowContent = sowContent.replace(/\u2028/g, '\n');
-    sowContent = sowContent.replace(/\u2029/g, '\n');
-    sowContent = sowContent.replace(/[\u200B-\u200D\uFEFF]/g, '');
-    sowContent = sowContent.replace(/[\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]/g, ' ');
-    sowContent = sowContent.replace(/[^\x00-\xFF]/g, '');
+    sowContent = cleanUnicode(sowContent);
 
     const apiKey = process.env.CLAUDE_API_KEY;
     if (!apiKey) {
@@ -114,20 +126,7 @@ app.post('/api/analyze-sow/openai', async (req, res) => {
     }
 
     // Clean Unicode characters that cause ByteString errors
-    // Remove line/paragraph separators
-    sowContent = sowContent.replace(/\u2028/g, '\n');
-    sowContent = sowContent.replace(/\u2029/g, '\n');
-    // Remove zero-width spaces and other problematic characters
-    sowContent = sowContent.replace(/[\u200B-\u200D\uFEFF]/g, '');
-    // Replace non-breaking spaces and other special spaces
-    sowContent = sowContent.replace(/[\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]/g, ' ');
-    // Remove any remaining non-ASCII characters that might cause issues
-    sowContent = sowContent.replace(/[^\x00-\x7F]/g, (char) => {
-      // Keep common accented characters, replace others
-      const code = char.charCodeAt(0);
-      if (code > 255) return '';
-      return char;
-    });
+    sowContent = cleanUnicode(sowContent);
 
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
@@ -150,8 +149,8 @@ Return ONLY valid JSON with this exact structure:
   "keyRequirements": ["requirement1", "requirement2"]
 }`;
 
-    // Clean the prompt as well
-    const cleanPrompt = prompt.replace(/\u2028/g, '\n').replace(/\u2029/g, '\n');
+    // Clean the entire prompt to be safe
+    const cleanPrompt = cleanUnicode(prompt);
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -286,13 +285,13 @@ app.post('/api/compare-project/openai', async (req, res) => {
       return res.status(500).json({ error: 'OpenAI API key not configured' });
     }
 
-    // Clean project data
+    // Clean project data using helper function
     const cleanProject = {
       ...project,
-      name: (project.name || '').replace(/[\u2028\u2029]/g, '\n').replace(/[^\x00-\xFF]/g, ''),
-      description: (project.description || '').replace(/[\u2028\u2029]/g, '\n').replace(/[^\x00-\xFF]/g, ''),
-      readme: (project.readme || '').replace(/[\u2028\u2029]/g, '\n').replace(/[^\x00-\xFF]/g, ''),
-      language: (project.language || '').replace(/[\u2028\u2029]/g, '\n').replace(/[^\x00-\xFF]/g, '')
+      name: cleanUnicode(project.name || ''),
+      description: cleanUnicode(project.description || ''),
+      readme: cleanUnicode(project.readme || ''),
+      language: cleanUnicode(project.language || '')
     };
 
     const prompt = `Compare this GitHub project with the SOW requirements and provide compatibility analysis:
@@ -319,8 +318,8 @@ Analyze and return ONLY valid JSON:
   "effortToAdapt": "low/medium/high"
 }`;
 
-    // Clean the entire prompt
-    const cleanPrompt = prompt.replace(/[\u2028\u2029]/g, '\n').replace(/[^\x00-\xFF]/g, '');
+    // Clean the entire prompt to remove Unicode characters
+    const cleanPrompt = cleanUnicode(prompt);
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
