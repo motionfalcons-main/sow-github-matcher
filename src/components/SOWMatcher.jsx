@@ -39,6 +39,22 @@ const SOWMatcher = () => {
     window.location.hostname === 'localhost' ? 'http://localhost:3001/api' : '/api'
   );
 
+  // Helper function to clean Unicode characters from text
+  const cleanText = (text) => {
+    if (!text) return text;
+    let cleaned = text;
+    // Remove line/paragraph separators
+    cleaned = cleaned.replace(/\u2028/g, '\n');
+    cleaned = cleaned.replace(/\u2029/g, '\n');
+    // Remove zero-width spaces
+    cleaned = cleaned.replace(/[\u200B-\u200D\uFEFF]/g, '');
+    // Replace special spaces with regular space
+    cleaned = cleaned.replace(/[\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]/g, ' ');
+    // Remove any character > 255 (non-Latin-1)
+    cleaned = cleaned.replace(/[^\x00-\xFF]/g, '');
+    return cleaned;
+  };
+
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -239,12 +255,15 @@ const SOWMatcher = () => {
       setIsAnalyzingSOW(true);
       setApiError('');
 
+      // Clean content before sending
+      const cleanedContent = cleanText(sowContent);
+
       const response = await fetch(`${API_BASE_URL}/analyze-sow/claude`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ sowContent })
+        body: JSON.stringify({ sowContent: cleanedContent })
       });
 
       if (!response.ok) {
@@ -335,12 +354,15 @@ const SOWMatcher = () => {
       setIsAnalyzingSOW(true);
       setApiError('');
 
+      // Clean content before sending
+      const cleanedContent = cleanText(sowContent);
+
       const response = await fetch(`${API_BASE_URL}/analyze-sow/openai`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ sowContent })
+        body: JSON.stringify({ sowContent: cleanedContent })
       });
 
       if (!response.ok) {
@@ -603,7 +625,7 @@ END OF REPORT
   };
 
   const loadSampleSOW = () => {
-    const sampleContent = `Project: Astrology AI Web Application
+    let sampleContent = `Project: Astrology AI Web Application
 
 Requirements:
 - Generate personalized daily horoscopes using AI
@@ -617,6 +639,12 @@ Technologies: Python/Node.js backend, React frontend, PostgreSQL database
 
 Timeline: 3-4 months
 Budget: $15,000`;
+
+    // Clean any Unicode characters
+    sampleContent = sampleContent.replace(/[\u2028\u2029]/g, '\n');
+    sampleContent = sampleContent.replace(/[\u200B-\u200D\uFEFF]/g, '');
+    sampleContent = sampleContent.replace(/[\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]/g, ' ');
+    sampleContent = sampleContent.replace(/[^\x00-\xFF]/g, '');
 
     setFileContent(sampleContent);
     setGithubKeywords('astrology AI horoscope prediction');
