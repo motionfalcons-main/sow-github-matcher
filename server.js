@@ -155,7 +155,7 @@ app.post('/api/analyze-sow/openai', async (req, res) => {
       return res.status(500).json({ error: 'OpenAI API key not configured' });
     }
 
-    const prompt = `Analyze this Statement of Work and extract key requirements in JSON format:
+    let prompt = `Analyze this Statement of Work and extract key requirements in JSON format:
 
 SOW Content:
 ${sowContent}
@@ -170,6 +170,9 @@ Return ONLY valid JSON with this exact structure:
   "estimatedTimeline": "estimated time to complete",
   "keyRequirements": ["requirement1", "requirement2"]
 }`;
+
+    // Clean the prompt to remove any Unicode characters
+    prompt = cleanUnicode(prompt);
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -307,7 +310,7 @@ app.post('/api/compare-project/openai', async (req, res) => {
     // Project data is already cleaned by middleware
     const cleanProject = project;
 
-    const prompt = `Compare this GitHub project with the SOW requirements and provide compatibility analysis:
+    let prompt = `Compare this GitHub project with the SOW requirements and provide compatibility analysis:
 
 SOW Requirements:
 ${JSON.stringify(sowAnalysis, null, 2)}
@@ -330,6 +333,9 @@ Analyze and return ONLY valid JSON:
   "recommendation": "brief recommendation text",
   "effortToAdapt": "low/medium/high"
 }`;
+
+    // Clean the prompt to remove Unicode characters
+    prompt = cleanUnicode(prompt);
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
