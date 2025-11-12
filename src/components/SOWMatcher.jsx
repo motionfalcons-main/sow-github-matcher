@@ -850,6 +850,47 @@ Budget: $15,000`;
                   </p>
                 )}
               </div>
+
+              {/* OR Divider */}
+              <div className="flex items-center my-6">
+                <div className="flex-grow border-t border-gray-300"></div>
+                <span className="px-4 text-gray-500 font-medium">OR</span>
+                <div className="flex-grow border-t border-gray-300"></div>
+              </div>
+
+              {/* Direct Text Input */}
+              <div className="border-2 border-gray-300 rounded-xl p-6 bg-white">
+                <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                  <FileText className="w-5 h-5 mr-2 text-blue-600" />
+                  Paste SOW Content Directly
+                </h4>
+                <textarea
+                  placeholder="Paste your Statement of Work (SOW) content here...&#10;&#10;Example:&#10;Project: AI-Powered Analytics Dashboard&#10;&#10;Requirements:&#10;- Real-time data visualization&#10;- User authentication and roles&#10;- API integrations&#10;- Mobile responsive design&#10;&#10;Technologies: React, Node.js, MongoDB&#10;Timeline: 3 months"
+                  value={fileContent}
+                  onChange={(e) => {
+                    const content = cleanText(e.target.value);
+                    setFileContent(content);
+                    // Create a mock file when typing
+                    if (content.trim()) {
+                      const mockFile = new File([content], 'pasted_sow.txt', { type: 'text/plain' });
+                      setSowFile(mockFile);
+                      setValidationErrors(prev => ({ ...prev, file: '' }));
+                    } else {
+                      setSowFile(null);
+                    }
+                  }}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-sm"
+                  rows={12}
+                />
+                <div className="flex justify-between items-center mt-2">
+                  <p className="text-sm text-gray-500">
+                    Paste or type your SOW content here instead of uploading a file
+                  </p>
+                  <span className="text-sm text-gray-500">
+                    {fileContent.length} characters
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* GitHub Keywords and API Key */}
