@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Github, Search, Upload, CheckCircle, XCircle, AlertCircle, Key, ExternalLink, File, FileType, FileImage, Star, Calendar, Code, Loader2, Download, Copy, RefreshCw } from 'lucide-react';
+import { FileText, Github, Search, Upload, CheckCircle, XCircle, AlertCircle, Key, ExternalLink, File, FileType, FileImage, Star, Calendar, Code, Loader2, Download, Copy, RefreshCw, DollarSign, Server } from 'lucide-react';
 
 const SOWMatcher = () => {
   const [sowFile, setSowFile] = useState(null);
@@ -524,6 +524,32 @@ ${project.comparison.recommendation}
 🔧 Effort to Adapt: ${project.comparison.effortToAdapt}
 Technology Alignment: ${project.comparison.technologyAlignment}
 
+`;
+
+      // Add Render Deployment Cost if available
+      if (project.comparison.renderDeployment) {
+        reportText += `💰 Render Deployment Estimate:
+Estimated Monthly Cost: ${project.comparison.renderDeployment.estimatedMonthlyCost}
+`;
+        
+        if (project.comparison.renderDeployment.services && project.comparison.renderDeployment.services.length > 0) {
+          reportText += `Required Services: ${project.comparison.renderDeployment.services.join(', ')}\n`;
+        }
+        
+        if (project.comparison.renderDeployment.reasoning) {
+          reportText += `Reasoning: ${project.comparison.renderDeployment.reasoning}\n`;
+        }
+        
+        if (project.comparison.renderDeployment.costBreakdown) {
+          reportText += `Cost Breakdown:\n`;
+          Object.entries(project.comparison.renderDeployment.costBreakdown).forEach(([key, value]) => {
+            const formattedKey = key.replace(/([A-Z])/g, ' $1').trim();
+            reportText += `  - ${formattedKey}: ${value}\n`;
+          });
+        }
+      }
+
+      reportText += `
 ---
 
 `;
@@ -1404,6 +1430,61 @@ Budget: $15,000`;
                         <span className="font-medium">Recommendation:</span> {project.comparison.recommendation}
                       </p>
                     </div>
+                    
+                    {/* Render Deployment Cost */}
+                    {project.comparison.renderDeployment && (
+                      <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg">
+                        <div className="flex items-center mb-3">
+                          <Server className="w-5 h-5 text-blue-600 mr-2" />
+                          <h4 className="font-semibold text-gray-900">Render Deployment Estimate</h4>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-gray-700">Estimated Monthly Cost:</span>
+                            <span className="text-lg font-bold text-blue-600 flex items-center">
+                              <DollarSign className="w-4 h-4" />
+                              {project.comparison.renderDeployment.estimatedMonthlyCost}
+                            </span>
+                          </div>
+                          
+                          {project.comparison.renderDeployment.services && project.comparison.renderDeployment.services.length > 0 && (
+                            <div className="mt-2">
+                              <span className="text-xs font-medium text-gray-700">Required Services:</span>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {project.comparison.renderDeployment.services.map((service, idx) => (
+                                  <span key={idx} className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
+                                    {service}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {project.comparison.renderDeployment.reasoning && (
+                            <div className="mt-2 pt-2 border-t border-blue-200">
+                              <p className="text-xs text-gray-600">
+                                <span className="font-medium">Why:</span> {project.comparison.renderDeployment.reasoning}
+                              </p>
+                            </div>
+                          )}
+                          
+                          {project.comparison.renderDeployment.costBreakdown && (
+                            <div className="mt-2 pt-2 border-t border-blue-200">
+                              <p className="text-xs font-medium text-gray-700 mb-1">Cost Breakdown:</p>
+                              <div className="space-y-1">
+                                {Object.entries(project.comparison.renderDeployment.costBreakdown).map(([key, value]) => (
+                                  <div key={key} className="flex justify-between text-xs text-gray-600">
+                                    <span className="capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}:</span>
+                                    <span className="font-medium">{value}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

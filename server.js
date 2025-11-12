@@ -257,7 +257,17 @@ Analyze and return ONLY valid JSON:
   "strengths": ["strength1", "strength2"],
   "weaknesses": ["weakness1", "weakness2"],
   "recommendation": "brief recommendation text",
-  "effortToAdapt": "low/medium/high"
+  "effortToAdapt": "low/medium/high",
+  "renderDeployment": {
+    "estimatedMonthlyCost": "$X - $Y (or Free)",
+    "services": ["Web Service", "PostgreSQL", "Redis", etc],
+    "reasoning": "Explanation of what services are needed and why",
+    "costBreakdown": {
+      "webService": "$X for Y instance type",
+      "database": "$X for PostgreSQL",
+      "other": "additional services if any"
+    }
+  }
 }`;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -342,7 +352,17 @@ app.post('/api/compare-project/openai', async (req, res) => {
       '  "strengths": ["strength1", "strength2"],',
       '  "weaknesses": ["weakness1", "weakness2"],',
       '  "recommendation": "brief recommendation text",',
-      '  "effortToAdapt": "low/medium/high"',
+      '  "effortToAdapt": "low/medium/high",',
+      '  "renderDeployment": {',
+      '    "estimatedMonthlyCost": "$X - $Y (or Free)",',
+      '    "services": ["Web Service", "PostgreSQL", "Redis", etc],',
+      '    "reasoning": "Explanation of what services are needed and why",',
+      '    "costBreakdown": {',
+      '      "webService": "$X for Y instance type",',
+      '      "database": "$X for PostgreSQL",',
+      '      "other": "additional services if any"',
+      '    }',
+      '  }',
       '}'
     ];
     
