@@ -668,8 +668,12 @@ Budget: $15,000`;
     setFileContent(sampleContent);
     setGithubKeywords('astrology AI horoscope prediction');
     
-    // Create a mock file object
-    const mockFile = new File([sampleContent], 'sample_sow.txt', { type: 'text/plain' });
+    // Create a mock file object using Blob
+    const blob = new Blob([sampleContent], { type: 'text/plain' });
+    const mockFile = Object.assign(blob, {
+      name: 'sample_sow.txt',
+      lastModified: Date.now()
+    });
     setSowFile(mockFile);
   };
 
@@ -898,7 +902,12 @@ Budget: $15,000`;
                     setFileContent(content);
                     // Create a mock file when typing
                     if (content.trim()) {
-                      const mockFile = new File([content], 'pasted_sow.txt', { type: 'text/plain' });
+                      // Create a Blob and convert it to a File-like object
+                      const blob = new Blob([content], { type: 'text/plain' });
+                      const mockFile = Object.assign(blob, {
+                        name: 'pasted_sow.txt',
+                        lastModified: Date.now()
+                      });
                       setSowFile(mockFile);
                       setValidationErrors(prev => ({ ...prev, file: '' }));
                     } else {
