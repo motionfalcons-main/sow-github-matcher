@@ -650,8 +650,8 @@ Budget: $15,000`;
   const analyzeMatch = async () => {
     const errors = {};
     
-    if (!sowFile) {
-      errors.file = 'Please upload a SOW file';
+    if (!sowFile && !fileContent.trim()) {
+      errors.file = 'Please upload a SOW file or paste content in the text box';
     }
     if (!githubKeywords.trim()) {
       errors.keywords = 'Please enter GitHub search keywords';
@@ -974,7 +974,7 @@ Budget: $15,000`;
           <div className="mt-8 text-center">
             <button
               onClick={analyzeMatch}
-              disabled={isLoading || !sowFile || !githubKeywords.trim()}
+              disabled={isLoading || (!sowFile && !fileContent.trim()) || !githubKeywords.trim()}
               className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-12 py-4 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none disabled:hover:scale-100"
             >
               <Search className="w-6 h-6 mr-3 inline" />
