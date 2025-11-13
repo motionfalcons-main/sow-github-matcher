@@ -793,139 +793,194 @@ Budget: $15,000`;
         </div>
       )}
       
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6">
-            SOW-GitHub Project Matcher
-          </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Upload your Statement of Work (SOW) document and search keywords to find matching GitHub projects with AI-powered analysis.
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center space-x-3 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+              <Github className="w-7 h-7 text-white" />
+            </div>
+            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              SOW Project Finder
+            </h1>
+          </div>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            AI-powered GitHub project matching for your Statement of Work
           </p>
+          
+          {/* Step Indicator */}
+          {!matchingResults && (
+            <div className="mt-8 flex items-center justify-center space-x-4 max-w-3xl mx-auto">
+              <div className="flex items-center space-x-2">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                  fileContent ? 'bg-green-500 text-white' : 'bg-blue-600 text-white'
+                }`}>
+                  {fileContent ? '✓' : '1'}
+                </div>
+                <span className={`text-sm font-medium ${fileContent ? 'text-green-600' : 'text-blue-600'}`}>
+                  Add SOW
+                </span>
+              </div>
+              <div className="w-16 h-0.5 bg-gray-300"></div>
+              <div className="flex items-center space-x-2">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                  githubKeywords.trim() ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-600'
+                }`}>
+                  {githubKeywords.trim() ? '✓' : '2'}
+                </div>
+                <span className={`text-sm font-medium ${githubKeywords.trim() ? 'text-green-600' : 'text-gray-500'}`}>
+                  Search Keywords
+                </span>
+              </div>
+              <div className="w-16 h-0.5 bg-gray-300"></div>
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center font-bold text-sm text-gray-600">
+                  3
+                </div>
+                <span className="text-sm font-medium text-gray-500">Analyze</span>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Main Input Card */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 mb-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* SOW File Upload */}
-            <div className="space-y-6">
-              <h3 className="text-xl font-semibold text-gray-900 flex items-center">
-                <FileText className="w-6 h-6 mr-3 text-blue-600" />
-                SOW Document Upload
-              </h3>
-              
-              {/* Drag and Drop Zone */}
-              <div 
-                className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 ${
-                  dragActive 
-                    ? 'border-blue-500 bg-blue-50' 
-                    : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
-                }`}
-                onDragEnter={handleDrag}
-                onDragLeave={handleDrag}
-                onDragOver={handleDrag}
-                onDrop={handleDrop}
-              >
-                <Upload className={`w-12 h-12 mx-auto mb-4 ${dragActive ? 'text-blue-500' : 'text-gray-400'}`} />
-                <p className="text-lg text-gray-700 mb-2 font-medium">
-                  {dragActive ? 'Drop your file here' : 'Drag & drop your SOW file here'}
-                </p>
-                <p className="text-sm text-gray-500 mb-4">
-                  Supports .txt, .pdf, .docx files
-                </p>
-                <input
-                  type="file"
-                  accept=".txt,.pdf,.docx"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  id="sow-upload"
-                />
-                <label
-                  htmlFor="sow-upload"
-                  className="cursor-pointer bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl"
-                >
-                  Choose File
-                </label>
-                
-                {/* File Info Display */}
-                {sowFile && (
-                  <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        {getFileIcon(sowFile.type)}
-                        <div>
-                          <p className="font-medium text-green-800">{sowFile.name}</p>
-                          <p className="text-sm text-green-600">{formatFileSize(sowFile.size)}</p>
-                        </div>
-                      </div>
-                      <CheckCircle className="w-6 h-6 text-green-600" />
-                    </div>
+        {/* Main Input Section */}
+        {!matchingResults && (
+          <div className="space-y-6 mb-8">
+            {/* Step 1: SOW Input */}
+            <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+                    <span className="text-blue-600 font-bold">1</span>
                   </div>
-                )}
-                
-                {/* File Content Preview */}
-                {fileContent && (
-                  <div className="mt-4 p-4 bg-gray-50 rounded-lg text-left">
-                    <h4 className="font-medium text-gray-900 mb-2">Extracted Content Preview:</h4>
-                    <div className="text-sm text-gray-600 max-h-32 overflow-y-auto">
-                      {fileContent.substring(0, 300)}...
-                    </div>
-                  </div>
-                )}
-                
-                {validationErrors.file && (
-                  <p className="text-red-600 text-sm mt-2 flex items-center">
-                    <XCircle className="w-4 h-4 mr-1" />
-                    {validationErrors.file}
-                  </p>
-                )}
-              </div>
-
-              {/* OR Divider */}
-              <div className="flex items-center my-6">
-                <div className="flex-grow border-t border-gray-300"></div>
-                <span className="px-4 text-gray-500 font-medium">OR</span>
-                <div className="flex-grow border-t border-gray-300"></div>
-              </div>
-
-              {/* Direct Text Input */}
-              <div className="border-2 border-gray-300 rounded-xl p-6 bg-white">
-                <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                  <FileText className="w-5 h-5 mr-2 text-blue-600" />
-                  Paste SOW Content Directly
-                </h4>
-                <textarea
-                  placeholder="Paste your Statement of Work (SOW) content here...&#10;&#10;Example:&#10;Project: AI-Powered Analytics Dashboard&#10;&#10;Requirements:&#10;- Real-time data visualization&#10;- User authentication and roles&#10;- API integrations&#10;- Mobile responsive design&#10;&#10;Technologies: React, Node.js, MongoDB&#10;Timeline: 3 months"
-                  value={fileContent}
-                  onChange={(e) => {
-                    const content = cleanText(e.target.value);
-                    setFileContent(content);
-                    // Create a mock file when typing
-                    if (content.trim()) {
-                      // Create a Blob and convert it to a File-like object
-                      const blob = new Blob([content], { type: 'text/plain' });
-                      const mockFile = Object.assign(blob, {
-                        name: 'pasted_sow.txt',
-                        lastModified: Date.now()
-                      });
-                      setSowFile(mockFile);
-                      setValidationErrors(prev => ({ ...prev, file: '' }));
-                    } else {
-                      setSowFile(null);
-                    }
-                  }}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-sm"
-                  rows={12}
-                />
-                <div className="flex justify-between items-center mt-2">
-                  <p className="text-sm text-gray-500">
-                    Paste or type your SOW content here instead of uploading a file
-                  </p>
-                  <span className="text-sm text-gray-500">
-                    {fileContent.length} characters
-                  </span>
+                  <h3 className="text-xl font-bold text-white">Add Your Statement of Work</h3>
                 </div>
+                <p className="text-blue-100 text-sm mt-2 ml-11">Upload a file or paste your SOW content directly</p>
               </div>
+              
+              <div className="p-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* File Upload Option */}
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2 mb-3">
+                      <Upload className="w-5 h-5 text-blue-600" />
+                      <h4 className="font-semibold text-gray-900">Option 1: Upload File</h4>
+                    </div>
+              
+                    <div 
+                      className={`border-2 border-dashed rounded-xl p-6 text-center transition-all duration-300 ${
+                        dragActive 
+                          ? 'border-blue-500 bg-blue-50' 
+                          : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
+                      }`}
+                      onDragEnter={handleDrag}
+                      onDragLeave={handleDrag}
+                      onDragOver={handleDrag}
+                      onDrop={handleDrop}
+                    >
+                      {!sowFile ? (
+                        <>
+                          <File className={`w-10 h-10 mx-auto mb-3 ${dragActive ? 'text-blue-500' : 'text-gray-400'}`} />
+                          <p className="text-sm text-gray-700 mb-1 font-medium">
+                            {dragActive ? 'Drop your file here' : 'Drag & drop file'}
+                          </p>
+                          <p className="text-xs text-gray-500 mb-3">
+                            .txt, .pdf, .docx
+                          </p>
+                          <input
+                            type="file"
+                            accept=".txt,.pdf,.docx"
+                            onChange={handleFileUpload}
+                            className="hidden"
+                            id="sow-upload"
+                          />
+                          <label
+                            htmlFor="sow-upload"
+                            className="inline-block cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-all"
+                          >
+                            Choose File
+                          </label>
+                        </>
+                      ) : (
+                        <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                          <div className="flex items-center space-x-2">
+                            {getFileIcon(sowFile.type)}
+                            <div className="flex-1 text-left">
+                              <p className="font-medium text-green-800 text-sm">{sowFile.name}</p>
+                              <p className="text-xs text-green-600">{formatFileSize(sowFile.size)}</p>
+                            </div>
+                            <CheckCircle className="w-5 h-5 text-green-600" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Text Input Option */}
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2 mb-3">
+                      <FileText className="w-5 h-5 text-purple-600" />
+                      <h4 className="font-semibold text-gray-900">Option 2: Paste Content</h4>
+                    </div>
+                    
+                    <textarea
+                      placeholder="Paste your SOW content here...&#10;&#10;Example:&#10;Project: AI Analytics Dashboard&#10;&#10;Requirements:&#10;- Real-time data viz&#10;- User auth & roles&#10;- API integrations&#10;&#10;Tech: React, Node.js&#10;Timeline: 3 months"
+                      value={fileContent}
+                      onChange={(e) => {
+                        const content = cleanText(e.target.value);
+                        setFileContent(content);
+                        if (content.trim()) {
+                          const blob = new Blob([content], { type: 'text/plain' });
+                          const mockFile = Object.assign(blob, {
+                            name: 'pasted_sow.txt',
+                            lastModified: Date.now()
+                          });
+                          setSowFile(mockFile);
+                          setValidationErrors(prev => ({ ...prev, file: '' }));
+                        } else {
+                          setSowFile(null);
+                        }
+                      }}
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none font-mono text-xs"
+                      rows={10}
+                    />
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-500">
+                        {fileContent.length > 0 ? `${fileContent.length} characters` : 'Type or paste here'}
+                      </span>
+                      <button
+                        onClick={loadSampleSOW}
+                        className="text-xs text-purple-600 hover:text-purple-700 font-medium flex items-center space-x-1"
+                      >
+                        <RefreshCw className="w-3 h-3" />
+                        <span>Load Sample</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Error Display */}
+                {validationErrors.file && (
+                  <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-2">
+                    <XCircle className="w-5 h-5 text-red-600" />
+                    <p className="text-red-700 text-sm font-medium">{validationErrors.file}</p>
+                  </div>
+                )}
+                
+                {/* Content Preview */}
+                {fileContent && fileContent.length > 100 && (
+                  <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <h4 className="text-sm font-semibold text-blue-900 mb-2 flex items-center">
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Content Loaded Successfully
+                    </h4>
+                    <div className="text-xs text-blue-700 max-h-24 overflow-y-auto bg-white p-2 rounded">
+                      {fileContent.substring(0, 200)}...
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
             </div>
 
             {/* GitHub Keywords and API Key */}
