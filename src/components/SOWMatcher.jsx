@@ -1145,75 +1145,75 @@ Budget: $15,000`;
             
             {/* Projects Grid */}
             {githubProjects.length > 0 && !isSearchingGitHub && !isFetchingReadmes && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {githubProjects.map((project) => (
-                  <div key={project.id} className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                    {/* Project Header */}
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">
-                          <a 
-                            href={project.url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="hover:text-blue-600 transition-colors"
-                          >
-                            {project.name}
-                          </a>
-                        </h3>
-                        <p className="text-gray-600 text-sm mb-3">{project.description}</p>
-                      </div>
+                  <div key={project.id} className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-lg transition-all h-full flex flex-col">
+                    {/* Project Header - Fixed Height */}
+                    <div className="p-5 border-b border-gray-100">
+                      <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">
+                        <a 
+                          href={project.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="hover:text-blue-600 transition-colors"
+                        >
+                          {project.name}
+                        </a>
+                      </h3>
+                      <p className="text-gray-600 text-sm line-clamp-2">{project.description}</p>
                     </div>
                     
                     {/* Project Stats */}
-                    <div className="flex items-center space-x-4 mb-4">
+                    <div className="px-5 py-3 bg-gray-50 flex items-center justify-between border-b border-gray-100">
                       <div className="flex items-center text-gray-600">
-                        <Star className="w-4 h-4 mr-1 text-yellow-500" />
-                        <span className="text-sm font-medium">{project.stars.toLocaleString()}</span>
+                        <Star className="w-4 h-4 mr-1 text-yellow-500 fill-yellow-500" />
+                        <span className="text-sm font-semibold">{project.stars.toLocaleString()}</span>
                       </div>
                       <div className="flex items-center text-gray-600">
-                        <Calendar className="w-4 h-4 mr-1" />
-                        <span className="text-sm font-medium">
+                        <Calendar className="w-4 h-4 mr-1 text-gray-400" />
+                        <span className="text-xs">
                           {new Date(project.updatedAt).toLocaleDateString()}
                         </span>
                       </div>
                     </div>
                     
-                    {/* Tech Stack - Prominent Display */}
-                    <div className="mb-4 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg p-3">
+                    {/* Tech Stack - Compact */}
+                    <div className="p-5 flex-1 flex flex-col">
                       <div className="flex items-center mb-2">
-                        <Code className="w-4 h-4 mr-2 text-purple-600" />
-                        <span className="text-sm font-bold text-purple-900">Tech Stack</span>
+                        <Code className="w-4 h-4 mr-1 text-purple-600" />
+                        <span className="text-xs font-bold text-purple-900">Tech Stack</span>
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        <span className="px-3 py-1 bg-purple-600 text-white text-sm rounded-full font-medium">
+                      <div className="flex flex-wrap gap-1.5">
+                        <span className="px-2.5 py-1 bg-purple-600 text-white text-xs rounded-full font-medium">
                           {project.language}
                         </span>
-                        {project.topics.slice(0, 4).map((topic) => (
+                        {project.topics.slice(0, 3).map((topic) => (
                           <span 
                             key={topic} 
-                            className="px-3 py-1 bg-white border border-purple-300 text-purple-700 text-sm rounded-full font-medium"
+                            className="px-2.5 py-1 bg-purple-100 text-purple-700 text-xs rounded-full font-medium"
                           >
                             {topic}
                           </span>
                         ))}
-                        {project.topics.length > 4 && (
-                          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                            +{project.topics.length - 4} more
+                        {project.topics.length > 3 && (
+                          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full font-medium">
+                            +{project.topics.length - 3}
                           </span>
                         )}
                       </div>
-                    </div>
-                    
-                    {/* README Preview */}
-                    {project.readme && (
-                      <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                        <h4 className="text-sm font-semibold text-gray-700 mb-2">README Preview:</h4>
-                        <div className="text-xs text-gray-600 max-h-20 overflow-y-auto">
-                          {project.readme}
+                      
+                      {/* README Preview - Fixed Height */}
+                      {project.readme && (
+                        <div className="mt-auto pt-3">
+                          <div className="p-2.5 bg-gray-50 rounded-lg border border-gray-200">
+                            <h4 className="text-xs font-semibold text-gray-700 mb-1">README:</h4>
+                            <div className="text-xs text-gray-600 line-clamp-3">
+                              {project.readme.substring(0, 150)}...
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
