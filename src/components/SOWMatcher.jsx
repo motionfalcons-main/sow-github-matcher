@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Github, Search, Upload, CheckCircle, XCircle, AlertCircle, Key, ExternalLink, File, FileType, FileImage, Star, Calendar, Code, Loader2, Download, Copy, RefreshCw, DollarSign, Server } from 'lucide-react';
+import { FileText, Github, Search, Upload, CheckCircle, XCircle, AlertCircle, Key, ExternalLink, File, FileType, FileImage, Star, Calendar, Code, Loader2, Download, Copy, RefreshCw, DollarSign, Server, Bookmark } from 'lucide-react';
+import SaveToCollectionButton from './SaveToCollectionButton';
+import CursorPromptGenerator from './CursorPromptGenerator';
+import CollectionsPage from './CollectionsPage';
 
 const SOWMatcher = () => {
   const [sowFile, setSowFile] = useState(null);
@@ -23,6 +26,7 @@ const SOWMatcher = () => {
   const [isComparingProjects, setIsComparingProjects] = useState(false);
   const [comparisonProgress, setComparisonProgress] = useState({ current: 0, total: 0 });
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  const [showCollections, setShowCollections] = useState(false);
 
   // Load saved provider preference
   useEffect(() => {
@@ -800,13 +804,25 @@ Budget: $15,000`;
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center space-x-3 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-              <Github className="w-7 h-7 text-white" />
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex-1"></div>
+            <div className="inline-flex items-center justify-center space-x-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Github className="w-7 h-7 text-white" />
+              </div>
+              <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                SOW Project Finder
+              </h1>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-              SOW Project Finder
-            </h1>
+            <div className="flex-1 flex justify-end">
+              <button
+                onClick={() => setShowCollections(true)}
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold text-sm flex items-center space-x-2 shadow-lg transition-all"
+              >
+                <Bookmark className="w-4 h-4" />
+                <span>My Collections</span>
+              </button>
+            </div>
           </div>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             AI-powered GitHub project matching for your Statement of Work
@@ -1389,17 +1405,29 @@ Budget: $15,000`;
                       )}
                     </div>
                     
-                    {/* Footer - View Project Link */}
-                    <div className="px-4 py-3 bg-gradient-to-br from-blue-50 to-purple-50 border-t-2 border-gray-100">
-                      <a 
-                        href={project.url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center justify-center space-x-1"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                        <span>View on GitHub</span>
-                      </a>
+                    {/* Footer - Actions */}
+                    <div className="p-3 bg-gradient-to-br from-blue-50 to-purple-50 border-t-2 border-gray-100 space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <a 
+                          href={project.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-all flex items-center justify-center space-x-1"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          <span>GitHub</span>
+                        </a>
+                        <SaveToCollectionButton project={project} />
+                      </div>
+                      
+                      {/* Cursor Prompt Generator - Only show if has comparison */}
+                      {hasComparison && sowAnalysis && (
+                        <CursorPromptGenerator 
+                          project={project} 
+                          sowAnalysis={sowAnalysis}
+                          compatibilityData={project.comparison}
+                        />
+                      )}
                     </div>
                   </div>
                   );
@@ -1741,6 +1769,11 @@ Budget: $15,000`;
               </div>
             </div>
           </div>
+        )}
+        
+        {/* Collections Modal */}
+        {showCollections && (
+          <CollectionsPage onClose={() => setShowCollections(false)} />
         )}
       </div>
     </div>

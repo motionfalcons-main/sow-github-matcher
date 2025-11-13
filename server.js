@@ -4,6 +4,9 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import axios from 'axios';
+import { connectDatabase } from './config/database.js';
+import collectionsRouter from './routes/collections.js';
+import { generateCursorPrompt } from './services/cursorPromptGenerator.js';
 
 dotenv.config();
 
@@ -12,6 +15,9 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Connect to MongoDB (optional - app works without it)
+connectDatabase().catch(err => console.log('MongoDB not available:', err.message));
 
 // Helper function to aggressively clean Unicode characters
 const cleanUnicode = (text) => {
@@ -400,6 +406,26 @@ app.post('/api/compare-project/openai', async (req, res) => {
     console.error('OpenAI Project Comparison Error:', error);
     const errorMsg = error.response?.data?.error?.message || error.message;
     res.status(error.response?.status || 500).json({ error: errorMsg });
+  }
+});
+
+// Collections routes
+app.use('/api/collections', collectionsRouter);
+
+// Generate Cursor AI prompt
+app.post('/api/generate-cursor-prompt', (req, res) => {
+  try {
+    const { project, sowAnalysis, compatibilityData } = req.body;
+    
+    if (!project) {
+      return res.status(400).json({ error: 'Project data is required' });
+    }
+    
+    const prompt = generateCursorPrompt(project, sowAnalysis || {}, compatibilityData || {});
+    res.json({ prompt });
+  } catch (error) {
+    console.error('Generate Cursor prompt error:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
