@@ -981,7 +981,6 @@ Budget: $15,000`;
                 )}
               </div>
             </div>
-            </div>
 
             {/* GitHub Keywords and API Key */}
             <div className="space-y-6">
@@ -1058,9 +1057,8 @@ Budget: $15,000`;
                 </p>
               </div>
             </div>
-          </div>
 
-          {/* Analyze Button */}
+            {/* Analyze Button */}
           <div className="mt-8 text-center">
             <button
               onClick={analyzeMatch}
@@ -1098,6 +1096,7 @@ Budget: $15,000`;
             </div>
           </div>
         </div>
+        )}
 
         {/* GitHub Projects Section */}
         {(isSearchingGitHub || isFetchingReadmes || githubProjects.length > 0) && (
