@@ -341,6 +341,7 @@ const SOWMatcher = () => {
     projectsWithComparisons.sort((a, b) => b.comparison.compatibilityScore - a.comparison.compatibilityScore);
     
     setProjectComparisons(projectsWithComparisons);
+    setGithubProjects(projectsWithComparisons); // Update the main projects list with comparisons
     setIsComparingProjects(false);
     return projectsWithComparisons;
   };
@@ -440,6 +441,7 @@ const SOWMatcher = () => {
     projectsWithComparisons.sort((a, b) => b.comparison.compatibilityScore - a.comparison.compatibilityScore);
     
     setProjectComparisons(projectsWithComparisons);
+    setGithubProjects(projectsWithComparisons); // Update the main projects list with comparisons
     setIsComparingProjects(false);
     return projectsWithComparisons;
   };
