@@ -9,6 +9,7 @@ const SOWMatcher = () => {
   const [matchingResults, setMatchingResults] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [expandedReadmes, setExpandedReadmes] = useState({}); // Track which READMEs are expanded
+  const [expandedFeatures, setExpandedFeatures] = useState({}); // Track which feature lists are expanded
   const [dragActive, setDragActive] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
   const [githubProjects, setGithubProjects] = useState([]);
@@ -1243,11 +1244,27 @@ Budget: $15,000`;
                                 <span className="text-xs font-bold text-green-900">Matching Features ({project.comparison.matchingFeatures.length})</span>
                               </div>
                               <div className="space-y-0.5">
-                                {project.comparison.matchingFeatures.slice(0, 2).map((feature, idx) => (
+                                {(expandedFeatures[`${project.id}-matching`] 
+                                  ? project.comparison.matchingFeatures 
+                                  : project.comparison.matchingFeatures.slice(0, 2)
+                                ).map((feature, idx) => (
                                   <div key={idx} className="text-xs text-green-700 pl-4">• {feature}</div>
                                 ))}
                                 {project.comparison.matchingFeatures.length > 2 && (
-                                  <div className="text-xs text-green-600 pl-4">+{project.comparison.matchingFeatures.length - 2} more</div>
+                                  <button
+                                    onClick={() => setExpandedFeatures(prev => ({
+                                      ...prev,
+                                      [`${project.id}-matching`]: !prev[`${project.id}-matching`]
+                                    }))}
+                                    className="text-xs text-green-600 hover:text-green-700 font-medium pl-4 mt-1 flex items-center space-x-1"
+                                  >
+                                    <span>
+                                      {expandedFeatures[`${project.id}-matching`] 
+                                        ? '▼ Show less' 
+                                        : `▶ Show ${project.comparison.matchingFeatures.length - 2} more`
+                                      }
+                                    </span>
+                                  </button>
                                 )}
                               </div>
                             </div>
@@ -1261,11 +1278,27 @@ Budget: $15,000`;
                                 <span className="text-xs font-bold text-red-900">Missing Features ({project.comparison.missingFeatures.length})</span>
                               </div>
                               <div className="space-y-0.5">
-                                {project.comparison.missingFeatures.slice(0, 2).map((feature, idx) => (
+                                {(expandedFeatures[`${project.id}-missing`] 
+                                  ? project.comparison.missingFeatures 
+                                  : project.comparison.missingFeatures.slice(0, 2)
+                                ).map((feature, idx) => (
                                   <div key={idx} className="text-xs text-red-700 pl-4">• {feature}</div>
                                 ))}
                                 {project.comparison.missingFeatures.length > 2 && (
-                                  <div className="text-xs text-red-600 pl-4">+{project.comparison.missingFeatures.length - 2} more</div>
+                                  <button
+                                    onClick={() => setExpandedFeatures(prev => ({
+                                      ...prev,
+                                      [`${project.id}-missing`]: !prev[`${project.id}-missing`]
+                                    }))}
+                                    className="text-xs text-red-600 hover:text-red-700 font-medium pl-4 mt-1 flex items-center space-x-1"
+                                  >
+                                    <span>
+                                      {expandedFeatures[`${project.id}-missing`] 
+                                        ? '▼ Show less' 
+                                        : `▶ Show ${project.comparison.missingFeatures.length - 2} more`
+                                      }
+                                    </span>
+                                  </button>
                                 )}
                               </div>
                             </div>
@@ -1282,12 +1315,33 @@ Budget: $15,000`;
                                 <span className="text-xs font-bold text-blue-700">{project.comparison.renderDeployment.estimatedMonthlyCost}</span>
                               </div>
                               {project.comparison.renderDeployment.services && project.comparison.renderDeployment.services.length > 0 && (
-                                <div className="flex flex-wrap gap-1 mt-1">
-                                  {project.comparison.renderDeployment.services.slice(0, 3).map((service, idx) => (
-                                    <span key={idx} className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">
-                                      {service}
-                                    </span>
-                                  ))}
+                                <div>
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {(expandedFeatures[`${project.id}-services`] 
+                                      ? project.comparison.renderDeployment.services 
+                                      : project.comparison.renderDeployment.services.slice(0, 3)
+                                    ).map((service, idx) => (
+                                      <span key={idx} className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">
+                                        {service}
+                                      </span>
+                                    ))}
+                                  </div>
+                                  {project.comparison.renderDeployment.services.length > 3 && (
+                                    <button
+                                      onClick={() => setExpandedFeatures(prev => ({
+                                        ...prev,
+                                        [`${project.id}-services`]: !prev[`${project.id}-services`]
+                                      }))}
+                                      className="text-xs text-blue-600 hover:text-blue-700 font-medium mt-1 flex items-center space-x-1"
+                                    >
+                                      <span>
+                                        {expandedFeatures[`${project.id}-services`] 
+                                          ? '▼ Show less' 
+                                          : `▶ Show ${project.comparison.renderDeployment.services.length - 3} more`
+                                        }
+                                      </span>
+                                    </button>
+                                  )}
                                 </div>
                               )}
                             </div>
