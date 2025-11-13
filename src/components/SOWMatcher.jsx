@@ -1147,8 +1147,35 @@ Budget: $15,000`;
             {/* Projects Grid */}
             {githubProjects.length > 0 && !isSearchingGitHub && !isFetchingReadmes && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {githubProjects.map((project) => (
-                  <div key={project.id} className="bg-white border-2 border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-blue-300 transition-all overflow-hidden flex flex-col h-full">
+                {githubProjects.map((project) => {
+                  const hasComparison = project.comparison;
+                  const score = hasComparison ? project.comparison.compatibilityScore : null;
+                  const isHighMatch = score >= 70;
+                  const isMediumMatch = score >= 50 && score < 70;
+                  
+                  return (
+                  <div key={project.id} className={`bg-white rounded-xl shadow-sm hover:shadow-lg transition-all overflow-hidden flex flex-col h-full ${
+                    hasComparison 
+                      ? isHighMatch 
+                        ? 'border-2 border-green-400' 
+                        : isMediumMatch 
+                        ? 'border-2 border-yellow-400' 
+                        : 'border-2 border-gray-300'
+                      : 'border-2 border-gray-200 hover:border-blue-300'
+                  }`}>
+                    {/* Compatibility Score Banner */}
+                    {hasComparison && (
+                      <div className={`px-4 py-2 text-center font-bold text-sm ${
+                        isHighMatch 
+                          ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white' 
+                          : isMediumMatch 
+                          ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white' 
+                          : 'bg-gradient-to-r from-gray-400 to-gray-500 text-white'
+                      }`}>
+                        🎯 {score}% Match {isHighMatch && '✨'}
+                      </div>
+                    )}
+                    
                     {/* Project Header */}
                     <div className="p-4 bg-gradient-to-br from-gray-50 to-white border-b-2 border-gray-100">
                       <h3 className="text-base font-bold text-gray-900 mb-1.5 h-12 flex items-center">
@@ -1203,6 +1230,78 @@ Budget: $15,000`;
                         )}
                       </div>
                       
+                      {/* AI Comparison Results */}
+                      {hasComparison && (
+                        <div className="mt-3 space-y-2">
+                          {/* Matching Features */}
+                          {project.comparison.matchingFeatures && project.comparison.matchingFeatures.length > 0 && (
+                            <div className="p-2 bg-green-50 border border-green-200 rounded-lg">
+                              <div className="flex items-center mb-1">
+                                <CheckCircle className="w-3 h-3 text-green-600 mr-1" />
+                                <span className="text-xs font-bold text-green-900">Matching Features ({project.comparison.matchingFeatures.length})</span>
+                              </div>
+                              <div className="space-y-0.5">
+                                {project.comparison.matchingFeatures.slice(0, 2).map((feature, idx) => (
+                                  <div key={idx} className="text-xs text-green-700 pl-4">• {feature}</div>
+                                ))}
+                                {project.comparison.matchingFeatures.length > 2 && (
+                                  <div className="text-xs text-green-600 pl-4">+{project.comparison.matchingFeatures.length - 2} more</div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Missing Features */}
+                          {project.comparison.missingFeatures && project.comparison.missingFeatures.length > 0 && (
+                            <div className="p-2 bg-red-50 border border-red-200 rounded-lg">
+                              <div className="flex items-center mb-1">
+                                <XCircle className="w-3 h-3 text-red-600 mr-1" />
+                                <span className="text-xs font-bold text-red-900">Missing Features ({project.comparison.missingFeatures.length})</span>
+                              </div>
+                              <div className="space-y-0.5">
+                                {project.comparison.missingFeatures.slice(0, 2).map((feature, idx) => (
+                                  <div key={idx} className="text-xs text-red-700 pl-4">• {feature}</div>
+                                ))}
+                                {project.comparison.missingFeatures.length > 2 && (
+                                  <div className="text-xs text-red-600 pl-4">+{project.comparison.missingFeatures.length - 2} more</div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Render Deployment Cost */}
+                          {project.comparison.renderDeployment && (
+                            <div className="p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                              <div className="flex items-center justify-between mb-1">
+                                <div className="flex items-center">
+                                  <DollarSign className="w-3 h-3 text-blue-600 mr-1" />
+                                  <span className="text-xs font-bold text-blue-900">Render Cost</span>
+                                </div>
+                                <span className="text-xs font-bold text-blue-700">{project.comparison.renderDeployment.estimatedMonthlyCost}</span>
+                              </div>
+                              {project.comparison.renderDeployment.services && project.comparison.renderDeployment.services.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {project.comparison.renderDeployment.services.slice(0, 3).map((service, idx) => (
+                                    <span key={idx} className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">
+                                      {service}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          
+                          {/* Recommendation */}
+                          {project.comparison.recommendation && (
+                            <div className="p-2 bg-gray-50 border border-gray-200 rounded-lg">
+                              <div className="text-xs text-gray-700">
+                                <span className="font-bold">💡 </span>{project.comparison.recommendation}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
                       {/* README Expandable Section */}
                       {project.readme && project.readme.length > 50 && (
                         <div className="mt-3">
@@ -1247,7 +1346,8 @@ Budget: $15,000`;
                       </a>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -1255,8 +1355,8 @@ Budget: $15,000`;
 
 
 
-        {/* Results Section */}
-        {matchingResults && (
+        {/* Results Section - Now shown in cards above, keeping only summary */}
+        {matchingResults && false && (
           <div className="space-y-8">
             {/* Overall Match Score */}
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
