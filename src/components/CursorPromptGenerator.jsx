@@ -25,7 +25,9 @@ const CursorPromptGenerator = ({ project, sowAnalysis, compatibilityData }) => {
         const data = await response.json();
         setPrompt(data.prompt);
       } else {
-        alert('Failed to generate prompt');
+        const errorData = await response.json();
+        console.error('Prompt generation error:', errorData);
+        alert(`Failed to generate prompt: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Generate prompt error:', error);

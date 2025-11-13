@@ -421,11 +421,35 @@ app.post('/api/generate-cursor-prompt', (req, res) => {
       return res.status(400).json({ error: 'Project data is required' });
     }
     
-    const prompt = generateCursorPrompt(project, sowAnalysis || {}, compatibilityData || {});
+    // Provide defaults if missing
+    const safeProject = {
+      name: project.name || 'Unknown Project',
+      url: project.url || project.html_url || '#',
+      stars: project.stars || project.stargazers_count || 0,
+      language: project.language || 'Unknown',
+      description: project.description || 'No description'
+    };
+    
+    const safeSowAnalysis = sowAnalysis || {
+      mainFeatures: [],
+      technologies: [],
+      projectType: 'Not specified',
+      complexity: 'medium',
+      estimatedTimeline: 'Not specified'
+    };
+    
+    const safeCompatibilityData = compatibilityData || {
+      compatibilityScore: 0,
+      matchingFeatures: [],
+      missingFeatures: [],
+      recommendation: 'No recommendation available'
+    };
+    
+    const prompt = generateCursorPrompt(safeProject, safeSowAnalysis, safeCompatibilityData);
     res.json({ prompt });
   } catch (error) {
     console.error('Generate Cursor prompt error:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: error.message, details: error.stack });
   }
 });
 
