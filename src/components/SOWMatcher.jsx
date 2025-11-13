@@ -3,6 +3,7 @@ import { FileText, Github, Search, Upload, CheckCircle, XCircle, AlertCircle, Ke
 import SaveToCollectionButton from './SaveToCollectionButton';
 import CursorPromptGenerator from './CursorPromptGenerator';
 import CollectionsPage from './CollectionsPage';
+import SmartRecommendations from './SmartRecommendations';
 
 const SOWMatcher = () => {
   const [sowFile, setSowFile] = useState(null);
@@ -1116,6 +1117,11 @@ Budget: $15,000`;
             </div>
           </div>
         </div>
+        )}
+
+        {/* Smart Recommendations - Show after analysis */}
+        {matchingResults && githubProjects.length > 0 && githubProjects[0].comparison && (
+          <SmartRecommendations projects={githubProjects} sowAnalysis={sowAnalysis} />
         )}
 
         {/* GitHub Projects Section */}
