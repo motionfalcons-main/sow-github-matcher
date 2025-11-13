@@ -8,6 +8,7 @@ const SOWMatcher = () => {
   const [selectedProvider, setSelectedProvider] = useState('openai'); // 'claude' or 'openai'
   const [matchingResults, setMatchingResults] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [expandedReadmes, setExpandedReadmes] = useState({}); // Track which READMEs are expanded
   const [dragActive, setDragActive] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
   const [githubProjects, setGithubProjects] = useState([]);
@@ -1201,6 +1202,36 @@ Budget: $15,000`;
                           </span>
                         )}
                       </div>
+                      
+                      {/* README Expandable Section */}
+                      {project.readme && project.readme.length > 50 && (
+                        <div className="mt-3">
+                          <button
+                            onClick={() => setExpandedReadmes(prev => ({
+                              ...prev,
+                              [project.id]: !prev[project.id]
+                            }))}
+                            className="w-full text-left p-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors flex items-center justify-between"
+                          >
+                            <div className="flex items-center space-x-1.5">
+                              <File className="w-3 h-3 text-gray-600" />
+                              <span className="text-xs font-semibold text-gray-700">README</span>
+                            </div>
+                            <span className="text-xs text-gray-500">
+                              {expandedReadmes[project.id] ? '▼ Collapse' : '▶ Expand'}
+                            </span>
+                          </button>
+                          
+                          {expandedReadmes[project.id] && (
+                            <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded-lg max-h-48 overflow-y-auto">
+                              <div className="text-xs text-gray-700 whitespace-pre-wrap break-words">
+                                {project.readme.substring(0, 1000)}
+                                {project.readme.length > 1000 && '...'}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                     
                     {/* Footer - View Project Link */}
