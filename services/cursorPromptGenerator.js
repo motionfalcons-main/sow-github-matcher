@@ -4,16 +4,26 @@
  */
 
 export function generateCursorPrompt(project, sowAnalysis, compatibilityData) {
-  const gaps = compatibilityData.missingFeatures || [];
-  const matches = compatibilityData.matchingFeatures || [];
-  const renderCost = compatibilityData.renderDeployment?.estimatedMonthlyCost || 'Unknown';
+  // Safe defaults for missing data
+  const safeCompatibilityData = compatibilityData || {};
+  const safeSowAnalysis = sowAnalysis || {};
+  
+  const gaps = safeCompatibilityData.missingFeatures || [];
+  const matches = safeCompatibilityData.matchingFeatures || [];
+  const renderCost = safeCompatibilityData.renderDeployment?.estimatedMonthlyCost || 'Unknown';
+  
+  // Safe project data
+  const projectUrl = project.url || project.html_url || '#';
+  const projectName = project.name || project.full_name || 'Unknown Project';
+  const projectStars = project.stars || project.stargazers_count || 0;
+  const projectLanguage = project.language || 'Unknown';
   
   const prompt = `# 🚀 PROJECT SETUP GUIDE
 
-## Project: ${project.name}
-Repository: ${project.url}
-Stars: ${project.stars || 0} ⭐
-Language: ${project.language || 'Unknown'}
+## Project: ${projectName}
+Repository: ${projectUrl}
+Stars: ${projectStars} ⭐
+Language: ${projectLanguage}
 
 ---
 
@@ -21,19 +31,19 @@ Language: ${project.language || 'Unknown'}
 I'm using this project as a boilerplate for a client project. Here are the requirements:
 
 **Client SOW Requirements:**
-${sowAnalysis.mainFeatures?.map(f => `- ${f}`).join('\n') || 'No features specified'}
+${safeSowAnalysis.mainFeatures?.map(f => `- ${f}`).join('\n') || 'No features specified'}
 
 **Tech Stack Required:**
-${sowAnalysis.technologies?.join(', ') || 'Not specified'}
+${safeSowAnalysis.technologies?.join(', ') || 'Not specified'}
 
-**Project Type:** ${sowAnalysis.projectType || 'Not specified'}
-**Complexity:** ${sowAnalysis.complexity || 'Not specified'}
-**Timeline:** ${sowAnalysis.estimatedTimeline || 'Not specified'}
+**Project Type:** ${safeSowAnalysis.projectType || 'Not specified'}
+**Complexity:** ${safeSowAnalysis.complexity || 'Not specified'}
+**Timeline:** ${safeSowAnalysis.estimatedTimeline || 'Not specified'}
 
 ---
 
 ## 🎯 COMPATIBILITY ANALYSIS
-This boilerplate has a **${compatibilityData.compatibilityScore || 0}/100 compatibility score** with my SOW.
+This boilerplate has a **${safeCompatibilityData.compatibilityScore || 0}/100 compatibility score** with my SOW.
 
 **What Already Exists:**
 ${matches.map(m => `✅ ${m}`).join('\n') || '✅ No matching features identified'}
@@ -43,7 +53,7 @@ ${gaps.map(g => `❌ ${g}`).join('\n') || '❌ All features already present'}
 
 **Deployment Estimate:**
 💰 Render Cost: ${renderCost}/month
-${compatibilityData.renderDeployment?.services?.map(s => `- ${s}`).join('\n') || ''}
+${safeCompatibilityData.renderDeployment?.services?.map(s => `- ${s}`).join('\n') || ''}
 
 ---
 
@@ -51,8 +61,8 @@ ${compatibilityData.renderDeployment?.services?.map(s => `- ${s}`).join('\n') ||
 
 ### Step 1: Clone and Analyze
 \`\`\`bash
-git clone ${project.url}
-cd ${project.name}
+git clone ${projectUrl}
+cd ${projectName}
 \`\`\`
 
 ### Step 2: Environment Setup
@@ -62,17 +72,17 @@ cd ${project.name}
 
 ### Step 3: Install Dependencies
 \`\`\`bash
-${project.language === 'JavaScript' ? 'npm install' : 
-  project.language === 'TypeScript' ? 'npm install' :
-  project.language === 'Python' ? 'pip install -r requirements.txt' : 
-  project.language === 'Java' ? 'mvn install' :
+${projectLanguage === 'JavaScript' ? 'npm install' : 
+  projectLanguage === 'TypeScript' ? 'npm install' :
+  projectLanguage === 'Python' ? 'pip install -r requirements.txt' : 
+  projectLanguage === 'Java' ? 'mvn install' :
   'See README for installation instructions'}
 \`\`\`
 
 ### Step 4: Run Development Server
 \`\`\`bash
-${project.language === 'JavaScript' || project.language === 'TypeScript' ? 'npm run dev' : 
-  project.language === 'Python' ? 'python app.py' :
+${projectLanguage === 'JavaScript' || projectLanguage === 'TypeScript' ? 'npm run dev' : 
+  projectLanguage === 'Python' ? 'python app.py' :
   'See README for run instructions'}
 \`\`\`
 
@@ -96,7 +106,7 @@ Please help me with the following:
    - Estimated implementation time
 
 3. **Integration Requirements**
-   ${sowAnalysis.technologies?.length > 0 ? `- How to integrate ${sowAnalysis.technologies.join(', ')}` : ''}
+   ${safeSowAnalysis.technologies?.length > 0 ? `- How to integrate ${safeSowAnalysis.technologies.join(', ')}` : ''}
    - Best practices for this tech stack
    - Security considerations
    - Performance optimization tips
@@ -117,7 +127,7 @@ ${generatePriorityTasks(gaps)}
 
 ## 💡 RECOMMENDATIONS
 
-${compatibilityData.recommendation || 'No specific recommendations provided'}
+${safeCompatibilityData.recommendation || 'No specific recommendations provided'}
 
 ---
 

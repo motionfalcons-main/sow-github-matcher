@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { Code, Copy, Download, Check, Loader2 } from 'lucide-react';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+// Backend API base URL - uses environment variable in production, or relative path if same domain
+const API_BASE_URL = import.meta.env.VITE_API_URL || (
+  window.location.hostname === 'localhost' ? 'http://localhost:3001/api' : '/api'
+);
 
 const CursorPromptGenerator = ({ project, sowAnalysis, compatibilityData }) => {
   const [prompt, setPrompt] = useState('');
@@ -11,27 +14,45 @@ const CursorPromptGenerator = ({ project, sowAnalysis, compatibilityData }) => {
   const generatePrompt = async () => {
     setLoading(true);
     try {
+      // Validate required data
+      if (!project) {
+        alert('Project data is missing. Please run the analysis first.');
+        setLoading(false);
+        return;
+      }
+
       const response = await fetch(`${API_BASE_URL}/generate-cursor-prompt`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           project,
-          sowAnalysis,
-          compatibilityData
+          sowAnalysis: sowAnalysis || null,
+          compatibilityData: compatibilityData || null
         })
       });
 
       if (response.ok) {
         const data = await response.json();
-        setPrompt(data.prompt);
+        if (data.prompt) {
+          setPrompt(data.prompt);
+        } else {
+          throw new Error('No prompt returned from server');
+        }
       } else {
-        const errorData = await response.json();
-        console.error('Prompt generation error:', errorData);
-        alert(`Failed to generate prompt: ${errorData.error || 'Unknown error'}`);
+        let errorMessage = 'Unknown error';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.message || `Server error: ${response.status}`;
+        } catch (e) {
+          errorMessage = `Server error: ${response.status} ${response.statusText}`;
+        }
+        console.error('Prompt generation error:', errorMessage);
+        alert(`Failed to generate prompt: ${errorMessage}`);
       }
     } catch (error) {
       console.error('Generate prompt error:', error);
-      alert('Failed to generate prompt');
+      const errorMessage = error.message || 'Network error. Please check your connection and try again.';
+      alert(`Failed to generate prompt: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -44,11 +65,14 @@ const CursorPromptGenerator = ({ project, sowAnalysis, compatibilityData }) => {
   };
 
   const downloadPrompt = () => {
+    if (!prompt) return;
+    
     const blob = new Blob([prompt], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${project.name}-cursor-setup.txt`;
+    const projectName = (project?.name || project?.full_name || 'project').replace(/[^a-z0-9]/gi, '-').toLowerCase();
+    a.download = `${projectName}-cursor-setup.txt`;
     a.click();
     URL.revokeObjectURL(url);
   };
