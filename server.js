@@ -443,12 +443,10 @@ app.post('/api/search-github', async (req, res) => {
     const data = response.data;
     console.log(`GitHub API returned ${data.items.length} repositories`);
     
-    // Filter out archived repos and repos not updated in last 6 months
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-    
+    // Filter out archived repos (but don't filter by date - too restrictive)
+    // Only filter archived repos to ensure we get active projects
     const filteredRepos = data.items
-      .filter(repo => !repo.archived && new Date(repo.updated_at) > sixMonthsAgo)
+      .filter(repo => !repo.archived)
       .slice(0, 10)
       .map(repo => ({
         id: repo.id,
@@ -463,7 +461,29 @@ app.post('/api/search-github', async (req, res) => {
         readme: null
       }));
 
-    console.log(`Returning ${filteredRepos.length} filtered repositories`);
+    console.log(`Returning ${filteredRepos.length} filtered repositories (after removing archived)`);
+    
+    // If we still have no repos after filtering, return the first 10 without filtering
+    if (filteredRepos.length === 0 && data.items.length > 0) {
+      console.log('No non-archived repos found, returning top 10 including archived');
+      const allRepos = data.items
+        .slice(0, 10)
+        .map(repo => ({
+          id: repo.id,
+          name: repo.name,
+          fullName: repo.full_name,
+          description: repo.description || 'No description available',
+          stars: repo.stargazers_count,
+          language: repo.language || 'Unknown',
+          url: repo.html_url,
+          topics: repo.topics || [],
+          updatedAt: repo.updated_at,
+          readme: null
+        }));
+      console.log(`Returning ${allRepos.length} repositories (including archived)`);
+      res.json({ repositories: allRepos });
+      return;
+    }
     res.json({ repositories: filteredRepos });
   } catch (error) {
     console.error('GitHub Search Error:', error);
