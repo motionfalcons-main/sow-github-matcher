@@ -412,6 +412,100 @@ app.post('/api/compare-project/openai', async (req, res) => {
 // Collections routes
 app.use('/api/collections', collectionsRouter);
 
+// GitHub API proxy endpoints
+app.post('/api/search-github', async (req, res) => {
+  try {
+    const { keywords } = req.body;
+    
+    if (!keywords || !keywords.trim()) {
+      return res.status(400).json({ error: 'Search keywords are required' });
+    }
+
+    const query = encodeURIComponent(keywords.trim());
+    const url = `https://api.github.com/search/repositories?q=${query}&sort=stars&order=desc&per_page=20`;
+    
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/vnd.github.v3+json',
+        'User-Agent': 'SOW-GitHub-Matcher'
+      }
+    });
+
+    if (!response.ok) {
+      if (response.status === 403) {
+        return res.status(403).json({ error: 'GitHub API rate limit exceeded. Please try again later.' });
+      }
+      return res.status(response.status).json({ 
+        error: `GitHub API error: ${response.status} ${response.statusText}` 
+      });
+    }
+
+    const data = await response.json();
+    
+    // Filter out archived repos and repos not updated in last 6 months
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    
+    const filteredRepos = data.items
+      .filter(repo => !repo.archived && new Date(repo.updated_at) > sixMonthsAgo)
+      .slice(0, 10)
+      .map(repo => ({
+        id: repo.id,
+        name: repo.name,
+        fullName: repo.full_name,
+        description: repo.description || 'No description available',
+        stars: repo.stargazers_count,
+        language: repo.language || 'Unknown',
+        url: repo.html_url,
+        topics: repo.topics || [],
+        updatedAt: repo.updated_at,
+        readme: null
+      }));
+
+    res.json({ repositories: filteredRepos });
+  } catch (error) {
+    console.error('GitHub Search Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/fetch-readme', async (req, res) => {
+  try {
+    const { owner, repo } = req.body;
+    
+    if (!owner || !repo) {
+      return res.status(400).json({ error: 'Owner and repo are required' });
+    }
+
+    const url = `https://api.github.com/repos/${owner}/${repo}/readme`;
+    
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/vnd.github.v3.raw',
+        'User-Agent': 'SOW-GitHub-Matcher'
+      }
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        return res.json({ readme: 'No README available' });
+      }
+      return res.status(response.status).json({ 
+        error: `Failed to fetch README: ${response.status}` 
+      });
+    }
+
+    const readmeContent = await response.text();
+    // Limit to first 3000 characters to save API costs
+    const limitedReadme = readmeContent.substring(0, 3000) + (readmeContent.length > 3000 ? '...' : '');
+    
+    res.json({ readme: limitedReadme });
+  } catch (error) {
+    console.error(`Error fetching README for ${owner}/${repo}:`, error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Generate Cursor AI prompt
 app.post('/api/generate-cursor-prompt', (req, res) => {
   try {

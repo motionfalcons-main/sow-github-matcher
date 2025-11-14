@@ -142,50 +142,27 @@ const SOWMatcher = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  // GitHub API Functions
+  // GitHub API Functions - Now using backend proxy
   const searchGitHubRepositories = async (keywords) => {
     try {
       setIsSearchingGitHub(true);
       setApiError('');
       
-      const query = encodeURIComponent(keywords);
-      const url = `https://api.github.com/search/repositories?q=${query}&sort=stars&order=desc&per_page=20`;
-      
-      const response = await fetch(url, {
+      const response = await fetch(`${API_BASE_URL}/search-github`, {
+        method: 'POST',
         headers: {
-          'Accept': 'application/vnd.github.v3+json',
-          'User-Agent': 'SOW-GitHub-Matcher'
-        }
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ keywords })
       });
 
       if (!response.ok) {
-        if (response.status === 403) {
-          throw new Error('GitHub API rate limit exceeded. Please try again later.');
-        }
-        throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
+        const error = await response.json();
+        throw new Error(error.error || `GitHub API error: ${response.status}`);
       }
 
       const data = await response.json();
-      
-      // Filter out archived repos and repos not updated in last 6 months
-      const sixMonthsAgo = new Date();
-      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-      
-      const filteredRepos = data.items
-        .filter(repo => !repo.archived && new Date(repo.updated_at) > sixMonthsAgo)
-        .slice(0, 10)
-        .map(repo => ({
-          id: repo.id,
-          name: repo.name,
-          fullName: repo.full_name,
-          description: repo.description || 'No description available',
-          stars: repo.stargazers_count,
-          language: repo.language || 'Unknown',
-          url: repo.html_url,
-          topics: repo.topics || [],
-          updatedAt: repo.updated_at,
-          readme: null
-        }));
+      const filteredRepos = data.repositories || [];
 
       setGithubProjects(filteredRepos);
       return filteredRepos;
@@ -200,25 +177,24 @@ const SOWMatcher = () => {
 
   const fetchReadmeForRepo = async (owner, repo) => {
     try {
-      const url = `https://api.github.com/repos/${owner}/${repo}/readme`;
-      
-      const response = await fetch(url, {
+      const response = await fetch(`${API_BASE_URL}/fetch-readme`, {
+        method: 'POST',
         headers: {
-          'Accept': 'application/vnd.github.v3.raw',
-          'User-Agent': 'SOW-GitHub-Matcher'
-        }
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ owner, repo })
       });
 
       if (!response.ok) {
         if (response.status === 404) {
           return 'No README available';
         }
-        throw new Error(`Failed to fetch README: ${response.status}`);
+        const error = await response.json();
+        throw new Error(error.error || `Failed to fetch README: ${response.status}`);
       }
 
-      const readmeContent = await response.text();
-      // Limit to first 3000 characters to save API costs
-      return readmeContent.substring(0, 3000) + (readmeContent.length > 3000 ? '...' : '');
+      const data = await response.json();
+      return data.readme || 'No README available';
     } catch (error) {
       console.error(`Error fetching README for ${owner}/${repo}:`, error);
       return 'No README available';
