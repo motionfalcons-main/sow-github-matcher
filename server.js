@@ -417,67 +417,113 @@ app.post('/api/search-github', async (req, res) => {
   try {
     const { keywords } = req.body;
     
-    console.log('GitHub search request received:', { keywords });
+    console.log('=== GitHub Search Request ===');
+    console.log('Keywords received:', keywords);
+    console.log('Request body:', req.body);
     
     if (!keywords || !keywords.trim()) {
+      console.log('ERROR: No keywords provided');
       return res.status(400).json({ error: 'Search keywords are required' });
     }
 
     const query = encodeURIComponent(keywords.trim());
     const url = `https://api.github.com/search/repositories?q=${query}&sort=stars&order=desc&per_page=20`;
     
-    console.log('Fetching from GitHub API:', url);
+    console.log('GitHub API URL:', url);
     
-    const response = await axios.get(url, {
-      headers: {
-        'Accept': 'application/vnd.github.v3+json',
-        'User-Agent': 'SOW-GitHub-Matcher'
+    let response;
+    try {
+      response = await axios.get(url, {
+        headers: {
+          'Accept': 'application/vnd.github.v3+json',
+          'User-Agent': 'SOW-GitHub-Matcher'
+        },
+        timeout: 10000 // 10 second timeout
+      });
+      console.log('GitHub API response status:', response.status);
+    } catch (axiosError) {
+      console.error('Axios error calling GitHub API:', axiosError.message);
+      if (axiosError.response) {
+        console.error('GitHub API error response:', axiosError.response.status, axiosError.response.data);
+        if (axiosError.response.status === 403) {
+          return res.status(403).json({ error: 'GitHub API rate limit exceeded. Please try again later.' });
+        }
+        return res.status(axiosError.response.status).json({ 
+          error: `GitHub API error: ${axiosError.response.status}` 
+        });
       }
-    });
+      return res.status(500).json({ error: 'Failed to connect to GitHub API. Please check your internet connection.' });
+    }
 
-    if (!response.data || !response.data.items) {
-      console.error('Invalid GitHub API response:', response.data);
+    if (!response || !response.data) {
+      console.error('ERROR: No response data from GitHub API');
       return res.status(500).json({ error: 'Invalid response from GitHub API' });
     }
 
     const data = response.data;
-    console.log(`GitHub API returned ${data.items ? data.items.length : 0} repositories`);
+    console.log('GitHub API response structure:', {
+      total_count: data.total_count,
+      items_length: data.items ? data.items.length : 0,
+      incomplete_results: data.incomplete_results
+    });
     
-    if (!data.items || data.items.length === 0) {
-      console.log('GitHub API returned no items');
+    if (!data.items || !Array.isArray(data.items) || data.items.length === 0) {
+      console.log('WARNING: GitHub API returned no items');
+      console.log('Full response:', JSON.stringify(data, null, 2));
       return res.json({ repositories: [] });
     }
+    
+    console.log(`Processing ${data.items.length} repositories from GitHub`);
     
     // Map all repos first, then filter
     const allRepos = data.items
       .slice(0, 20) // Get up to 20 to have options after filtering
-      .map(repo => ({
-        id: repo.id,
-        name: repo.name,
-        fullName: repo.full_name,
-        description: repo.description || 'No description available',
-        stars: repo.stargazers_count || 0,
-        language: repo.language || 'Unknown',
-        url: repo.html_url,
-        topics: repo.topics || [],
-        updatedAt: repo.updated_at,
-        readme: null,
-        archived: repo.archived || false
-      }));
+      .map(repo => {
+        try {
+          return {
+            id: repo.id,
+            name: repo.name || 'Unknown',
+            fullName: repo.full_name || `${repo.owner?.login || 'unknown'}/${repo.name || 'unknown'}`,
+            description: repo.description || 'No description available',
+            stars: repo.stargazers_count || 0,
+            language: repo.language || 'Unknown',
+            url: repo.html_url || repo.url || '#',
+            topics: Array.isArray(repo.topics) ? repo.topics : [],
+            updatedAt: repo.updated_at || new Date().toISOString(),
+            readme: null,
+            archived: repo.archived === true
+          };
+        } catch (mapError) {
+          console.error('Error mapping repo:', mapError, repo);
+          return null;
+        }
+      })
+      .filter(repo => repo !== null); // Remove any null entries
 
-    console.log(`Mapped ${allRepos.length} repositories`);
+    console.log(`Successfully mapped ${allRepos.length} repositories`);
+    
+    if (allRepos.length === 0) {
+      console.log('ERROR: All repositories failed to map');
+      return res.json({ repositories: [] });
+    }
     
     // Try to filter out archived repos, but if that leaves us with nothing, use all repos
     const filteredRepos = allRepos.filter(repo => !repo.archived);
     
-    console.log(`After filtering archived: ${filteredRepos.length} repositories`);
+    console.log(`After filtering archived: ${filteredRepos.length} repositories (from ${allRepos.length} total)`);
     
     // Always return at least the top 10, even if all are archived
     const reposToReturn = filteredRepos.length > 0 
       ? filteredRepos.slice(0, 10)
       : allRepos.slice(0, 10);
 
-    console.log(`Returning ${reposToReturn.length} repositories`);
+    console.log(`=== Returning ${reposToReturn.length} repositories ===`);
+    console.log('Sample repo:', reposToReturn[0] ? {
+      name: reposToReturn[0].name,
+      fullName: reposToReturn[0].fullName,
+      stars: reposToReturn[0].stars
+    } : 'none');
+    
     res.json({ repositories: reposToReturn });
   } catch (error) {
     console.error('GitHub Search Error:', error);
