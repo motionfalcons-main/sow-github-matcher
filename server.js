@@ -441,50 +441,44 @@ app.post('/api/search-github', async (req, res) => {
     }
 
     const data = response.data;
-    console.log(`GitHub API returned ${data.items.length} repositories`);
+    console.log(`GitHub API returned ${data.items ? data.items.length : 0} repositories`);
     
-    // Filter out archived repos (but don't filter by date - too restrictive)
-    // Only filter archived repos to ensure we get active projects
-    const filteredRepos = data.items
-      .filter(repo => !repo.archived)
-      .slice(0, 10)
+    if (!data.items || data.items.length === 0) {
+      console.log('GitHub API returned no items');
+      return res.json({ repositories: [] });
+    }
+    
+    // Map all repos first, then filter
+    const allRepos = data.items
+      .slice(0, 20) // Get up to 20 to have options after filtering
       .map(repo => ({
         id: repo.id,
         name: repo.name,
         fullName: repo.full_name,
         description: repo.description || 'No description available',
-        stars: repo.stargazers_count,
+        stars: repo.stargazers_count || 0,
         language: repo.language || 'Unknown',
         url: repo.html_url,
         topics: repo.topics || [],
         updatedAt: repo.updated_at,
-        readme: null
+        readme: null,
+        archived: repo.archived || false
       }));
 
-    console.log(`Returning ${filteredRepos.length} filtered repositories (after removing archived)`);
+    console.log(`Mapped ${allRepos.length} repositories`);
     
-    // If we still have no repos after filtering, return the first 10 without filtering
-    if (filteredRepos.length === 0 && data.items.length > 0) {
-      console.log('No non-archived repos found, returning top 10 including archived');
-      const allRepos = data.items
-        .slice(0, 10)
-        .map(repo => ({
-          id: repo.id,
-          name: repo.name,
-          fullName: repo.full_name,
-          description: repo.description || 'No description available',
-          stars: repo.stargazers_count,
-          language: repo.language || 'Unknown',
-          url: repo.html_url,
-          topics: repo.topics || [],
-          updatedAt: repo.updated_at,
-          readme: null
-        }));
-      console.log(`Returning ${allRepos.length} repositories (including archived)`);
-      res.json({ repositories: allRepos });
-      return;
-    }
-    res.json({ repositories: filteredRepos });
+    // Try to filter out archived repos, but if that leaves us with nothing, use all repos
+    const filteredRepos = allRepos.filter(repo => !repo.archived);
+    
+    console.log(`After filtering archived: ${filteredRepos.length} repositories`);
+    
+    // Always return at least the top 10, even if all are archived
+    const reposToReturn = filteredRepos.length > 0 
+      ? filteredRepos.slice(0, 10)
+      : allRepos.slice(0, 10);
+
+    console.log(`Returning ${reposToReturn.length} repositories`);
+    res.json({ repositories: reposToReturn });
   } catch (error) {
     console.error('GitHub Search Error:', error);
     if (error.response) {

@@ -181,6 +181,10 @@ const SOWMatcher = () => {
 
       if (filteredRepos.length === 0) {
         console.warn('No repositories returned from search');
+        setApiError('No repositories found. Try different search keywords or check if your search terms are too specific.');
+        // Don't throw error, just return empty array so user can see the message
+        setGithubProjects([]);
+        return [];
       }
 
       setGithubProjects(filteredRepos);
