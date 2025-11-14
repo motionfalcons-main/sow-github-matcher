@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Github, Search, Upload, CheckCircle, XCircle, AlertCircle, Key, ExternalLink, File, FileType, FileImage, Star, Calendar, Code, Loader2, Download, Copy, RefreshCw, DollarSign, Server, Bookmark } from 'lucide-react';
+import { FileText, Github, Search, Upload, CheckCircle, XCircle, AlertCircle, Key, ExternalLink, File, FileType, FileImage, Star, Calendar, Code, Loader2, Download, Copy, RefreshCw, DollarSign, Server, Bookmark, Square } from 'lucide-react';
 import SaveToCollectionButton from './SaveToCollectionButton';
 import CursorPromptGenerator from './CursorPromptGenerator';
 import CollectionsPage from './CollectionsPage';
@@ -28,6 +28,7 @@ const SOWMatcher = () => {
   const [comparisonProgress, setComparisonProgress] = useState({ current: 0, total: 0 });
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [showCollections, setShowCollections] = useState(false);
+  const [shouldCancel, setShouldCancel] = useState(false);
 
   // Load saved provider preference
   useEffect(() => {
@@ -203,11 +204,19 @@ const SOWMatcher = () => {
 
   const fetchAllReadmes = async (projects) => {
     setIsFetchingReadmes(true);
+    setShouldCancel(false);
     setReadmeProgress({ current: 0, total: projects.length });
     
     const projectsWithReadmes = [];
     
     for (let i = 0; i < projects.length; i++) {
+      // Check for cancellation
+      if (shouldCancel) {
+        setIsFetchingReadmes(false);
+        setGithubProjects(projectsWithReadmes);
+        return projectsWithReadmes;
+      }
+      
       const project = projects[i];
       const [owner, repo] = project.fullName.split('/');
       
@@ -303,11 +312,22 @@ const SOWMatcher = () => {
 
   const compareAllProjects = async (projects, sowAnalysis) => {
     setIsComparingProjects(true);
+    setShouldCancel(false);
     setComparisonProgress({ current: 0, total: projects.length });
     
     const projectsWithComparisons = [];
     
     for (let i = 0; i < projects.length; i++) {
+      // Check for cancellation
+      if (shouldCancel) {
+        setIsComparingProjects(false);
+        // Sort what we have so far
+        projectsWithComparisons.sort((a, b) => b.comparison.compatibilityScore - a.comparison.compatibilityScore);
+        setProjectComparisons(projectsWithComparisons);
+        setGithubProjects(projectsWithComparisons);
+        return projectsWithComparisons;
+      }
+      
       const project = projects[i];
       
       setComparisonProgress({ current: i + 1, total: projects.length });
@@ -403,11 +423,22 @@ const SOWMatcher = () => {
 
   const compareAllProjectsWithOpenAI = async (projects, sowAnalysis) => {
     setIsComparingProjects(true);
+    setShouldCancel(false);
     setComparisonProgress({ current: 0, total: projects.length });
     
     const projectsWithComparisons = [];
     
     for (let i = 0; i < projects.length; i++) {
+      // Check for cancellation
+      if (shouldCancel) {
+        setIsComparingProjects(false);
+        // Sort what we have so far
+        projectsWithComparisons.sort((a, b) => b.comparison.compatibilityScore - a.comparison.compatibilityScore);
+        setProjectComparisons(projectsWithComparisons);
+        setGithubProjects(projectsWithComparisons);
+        return projectsWithComparisons;
+      }
+      
       const project = projects[i];
       
       setComparisonProgress({ current: i + 1, total: projects.length });
@@ -681,6 +712,7 @@ Budget: $15,000`;
     setIsLoading(true);
     setValidationErrors({});
     setApiError('');
+    setShouldCancel(false);
     
     try {
       // Step 1: Search GitHub repositories
@@ -694,16 +726,34 @@ Budget: $15,000`;
 
       // Step 2: Fetch README files for all projects
       const projectsWithReadmes = await fetchAllReadmes(projects);
+      
+      // Check if cancelled during README fetching
+      if (shouldCancel) {
+        setIsLoading(false);
+        return;
+      }
 
       // Step 3: Analyze SOW with selected AI provider
       const sowAnalysis = selectedProvider === 'claude' 
         ? await analyzeSOWWithClaude(fileContent)
         : await analyzeSOWWithOpenAI(fileContent);
+      
+      // Check if cancelled during SOW analysis
+      if (shouldCancel) {
+        setIsLoading(false);
+        return;
+      }
 
       // Step 4: Compare each project with SOW requirements
       const projectsWithComparisons = selectedProvider === 'claude'
         ? await compareAllProjects(projectsWithReadmes, sowAnalysis)
         : await compareAllProjectsWithOpenAI(projectsWithReadmes, sowAnalysis);
+      
+      // Check if cancelled during comparison
+      if (shouldCancel) {
+        setIsLoading(false);
+        return;
+      }
 
       // Step 5: Generate final report
       await generateFinalReport(projectsWithComparisons, sowAnalysis);
@@ -722,15 +772,34 @@ Budget: $15,000`;
       {/* Floating Progress Indicator */}
       {(isSearchingGitHub || isFetchingReadmes || isAnalyzingSOW || isComparingProjects || isGeneratingReport) && (
         <div className="fixed top-4 right-4 z-50 bg-white rounded-2xl shadow-2xl border border-gray-200 p-6 max-w-sm animate-slide-in">
-          <div className="flex items-center mb-4">
-            <Loader2 className={`w-6 h-6 animate-spin mr-3 ${selectedProvider === 'claude' ? 'text-indigo-600' : 'text-green-600'}`} />
-            <h3 className="font-bold text-gray-900">
-              {isSearchingGitHub && 'Searching GitHub...'}
-              {isFetchingReadmes && `Fetching READMEs...`}
-              {isAnalyzingSOW && 'Analyzing SOW...'}
-              {isComparingProjects && 'Comparing Projects...'}
-              {isGeneratingReport && 'Generating Report...'}
-            </h3>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              <Loader2 className={`w-6 h-6 animate-spin mr-3 ${selectedProvider === 'claude' ? 'text-indigo-600' : 'text-green-600'}`} />
+              <h3 className="font-bold text-gray-900">
+                {isSearchingGitHub && 'Searching GitHub...'}
+                {isFetchingReadmes && `Fetching READMEs...`}
+                {isAnalyzingSOW && 'Analyzing SOW...'}
+                {isComparingProjects && 'Comparing Projects...'}
+                {isGeneratingReport && 'Generating Report...'}
+              </h3>
+            </div>
+            {(isFetchingReadmes || isComparingProjects) && (
+              <button
+                onClick={() => {
+                  setShouldCancel(true);
+                  if (isFetchingReadmes) {
+                    setIsFetchingReadmes(false);
+                  }
+                  if (isComparingProjects) {
+                    setIsComparingProjects(false);
+                  }
+                }}
+                className="ml-4 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                title="Stop"
+              >
+                <Square className="w-5 h-5" />
+              </button>
+            )}
           </div>
           
           {isFetchingReadmes && (
