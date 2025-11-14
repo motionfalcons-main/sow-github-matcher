@@ -149,6 +149,9 @@ const SOWMatcher = () => {
       setIsSearchingGitHub(true);
       setApiError('');
       
+      console.log('Searching GitHub with keywords:', keywords);
+      console.log('API Base URL:', API_BASE_URL);
+      
       const response = await fetch(`${API_BASE_URL}/search-github`, {
         method: 'POST',
         headers: {
@@ -157,19 +160,35 @@ const SOWMatcher = () => {
         body: JSON.stringify({ keywords })
       });
 
+      console.log('GitHub search response status:', response.status);
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || `GitHub API error: ${response.status}`);
+        let errorMessage = 'Unknown error';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || `GitHub API error: ${response.status}`;
+          console.error('GitHub search error response:', errorData);
+        } catch (e) {
+          errorMessage = `Server error: ${response.status} ${response.statusText}`;
+          console.error('Failed to parse error response:', e);
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
+      console.log('GitHub search response data:', data);
       const filteredRepos = data.repositories || [];
+
+      if (filteredRepos.length === 0) {
+        console.warn('No repositories returned from search');
+      }
 
       setGithubProjects(filteredRepos);
       return filteredRepos;
     } catch (error) {
       console.error('GitHub API Error:', error);
-      setApiError(error.message);
+      const errorMessage = error.message || 'Failed to search GitHub repositories. Please check your connection and try again.';
+      setApiError(errorMessage);
       throw error;
     } finally {
       setIsSearchingGitHub(false);

@@ -417,6 +417,8 @@ app.post('/api/search-github', async (req, res) => {
   try {
     const { keywords } = req.body;
     
+    console.log('GitHub search request received:', { keywords });
+    
     if (!keywords || !keywords.trim()) {
       return res.status(400).json({ error: 'Search keywords are required' });
     }
@@ -424,23 +426,22 @@ app.post('/api/search-github', async (req, res) => {
     const query = encodeURIComponent(keywords.trim());
     const url = `https://api.github.com/search/repositories?q=${query}&sort=stars&order=desc&per_page=20`;
     
-    const response = await fetch(url, {
+    console.log('Fetching from GitHub API:', url);
+    
+    const response = await axios.get(url, {
       headers: {
         'Accept': 'application/vnd.github.v3+json',
         'User-Agent': 'SOW-GitHub-Matcher'
       }
     });
 
-    if (!response.ok) {
-      if (response.status === 403) {
-        return res.status(403).json({ error: 'GitHub API rate limit exceeded. Please try again later.' });
-      }
-      return res.status(response.status).json({ 
-        error: `GitHub API error: ${response.status} ${response.statusText}` 
-      });
+    if (!response.data || !response.data.items) {
+      console.error('Invalid GitHub API response:', response.data);
+      return res.status(500).json({ error: 'Invalid response from GitHub API' });
     }
 
-    const data = await response.json();
+    const data = response.data;
+    console.log(`GitHub API returned ${data.items.length} repositories`);
     
     // Filter out archived repos and repos not updated in last 6 months
     const sixMonthsAgo = new Date();
@@ -462,10 +463,20 @@ app.post('/api/search-github', async (req, res) => {
         readme: null
       }));
 
+    console.log(`Returning ${filteredRepos.length} filtered repositories`);
     res.json({ repositories: filteredRepos });
   } catch (error) {
     console.error('GitHub Search Error:', error);
-    res.status(500).json({ error: error.message });
+    if (error.response) {
+      // Axios error with response
+      if (error.response.status === 403) {
+        return res.status(403).json({ error: 'GitHub API rate limit exceeded. Please try again later.' });
+      }
+      return res.status(error.response.status).json({ 
+        error: `GitHub API error: ${error.response.status} ${error.response.statusText}` 
+      });
+    }
+    res.status(500).json({ error: error.message || 'Failed to search GitHub repositories' });
   }
 });
 
@@ -479,30 +490,28 @@ app.post('/api/fetch-readme', async (req, res) => {
 
     const url = `https://api.github.com/repos/${owner}/${repo}/readme`;
     
-    const response = await fetch(url, {
+    const response = await axios.get(url, {
       headers: {
         'Accept': 'application/vnd.github.v3.raw',
         'User-Agent': 'SOW-GitHub-Matcher'
       }
     });
 
-    if (!response.ok) {
-      if (response.status === 404) {
-        return res.json({ readme: 'No README available' });
-      }
-      return res.status(response.status).json({ 
-        error: `Failed to fetch README: ${response.status}` 
-      });
-    }
-
-    const readmeContent = await response.text();
+    const readmeContent = response.data;
     // Limit to first 3000 characters to save API costs
-    const limitedReadme = readmeContent.substring(0, 3000) + (readmeContent.length > 3000 ? '...' : '');
+    const limitedReadme = typeof readmeContent === 'string' 
+      ? readmeContent.substring(0, 3000) + (readmeContent.length > 3000 ? '...' : '')
+      : 'No README available';
     
     res.json({ readme: limitedReadme });
   } catch (error) {
     console.error(`Error fetching README for ${owner}/${repo}:`, error);
-    res.status(500).json({ error: error.message });
+    if (error.response && error.response.status === 404) {
+      return res.json({ readme: 'No README available' });
+    }
+    res.status(error.response?.status || 500).json({ 
+      error: error.message || 'Failed to fetch README' 
+    });
   }
 });
 
