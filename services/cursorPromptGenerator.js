@@ -65,12 +65,46 @@ git clone ${projectUrl}
 cd ${projectName}
 \`\`\`
 
-### Step 2: Environment Setup
+### Step 2: REBRANDING - CRITICAL (Do This First!)
+**⚠️ IMPORTANT: You MUST completely rebrand this project to avoid any claims that this is the original project.**
+
+Before making any other changes, you need to:
+
+1. **Change All UI Names and Branding:**
+   - Search and replace all project names, app names, and brand names throughout the codebase
+   - Update all visible text in the UI (titles, headers, footers, navigation)
+   - Change logo files, favicon, and any brand assets
+   - Update meta tags, page titles, and SEO content
+   - Modify package.json, README.md, and all documentation
+
+2. **Remove/Replace All Credits:**
+   - Remove or replace all copyright notices
+   - Update author names and attribution
+   - Change "About" pages, footer credits, and acknowledgments
+   - Remove original project references and links
+   - Update license files if applicable
+
+3. **Update Configuration Files:**
+   - Change app names in package.json, manifest.json, config files
+   - Update environment variable names if they reference the original project
+   - Modify build configuration and deployment settings
+
+4. **Search for Original Project References:**
+   - Use find/replace across the entire codebase for:
+     - Original project name
+     - Original author/creator names
+     - Original repository URLs
+     - Original domain names
+     - Any other identifying information
+
+**This rebranding is essential to ensure the project is clearly your own work and not a copy of the original.**
+
+### Step 3: Environment Setup
 - Create a \`.env\` file
 - Add required environment variables
 - Check README for specific configuration needs
 
-### Step 3: Install Dependencies
+### Step 4: Install Dependencies
 \`\`\`bash
 ${projectLanguage === 'JavaScript' ? 'npm install' : 
   projectLanguage === 'TypeScript' ? 'npm install' :
@@ -79,7 +113,7 @@ ${projectLanguage === 'JavaScript' ? 'npm install' :
   'See README for installation instructions'}
 \`\`\`
 
-### Step 4: Run Development Server
+### Step 5: Run Development Server
 \`\`\`bash
 ${projectLanguage === 'JavaScript' || projectLanguage === 'TypeScript' ? 'npm run dev' : 
   projectLanguage === 'Python' ? 'python app.py' :
@@ -92,12 +126,18 @@ ${projectLanguage === 'JavaScript' || projectLanguage === 'TypeScript' ? 'npm ru
 
 Please help me with the following:
 
-1. **Analyze Project Structure**
+1. **Rebranding Assistance (Priority #1)**
+   - Identify all files containing original project names, branding, or credits
+   - Provide a comprehensive list of strings to search and replace
+   - Help update UI components with new branding
+   - Ensure no original project references remain
+
+2. **Analyze Project Structure**
    - Identify the main entry points
    - Map out the folder structure
    - Locate where I should add new features
 
-2. **Feature Implementation**
+3. **Feature Implementation**
    For each missing feature, provide:
    - Where to add the code (specific files)
    - What files to create/modify
@@ -105,13 +145,13 @@ Please help me with the following:
    - Code examples and best practices
    - Estimated implementation time
 
-3. **Integration Requirements**
+4. **Integration Requirements**
    ${safeSowAnalysis.technologies?.length > 0 ? `- How to integrate ${safeSowAnalysis.technologies.join(', ')}` : ''}
    - Best practices for this tech stack
    - Security considerations
    - Performance optimization tips
 
-4. **Deployment Preparation**
+5. **Deployment Preparation**
    - Verify Render deployment compatibility
    - Identify any deployment blockers
    - Configure environment variables
@@ -131,7 +171,7 @@ ${safeCompatibilityData.recommendation || 'No specific recommendations provided'
 
 ---
 
-Start by analyzing the project structure and giving me a clear, step-by-step roadmap for implementing the missing features. Focus on the highest priority items first.
+**START WITH REBRANDING**: First, help me identify and replace all original project names, UI text, credits, and branding elements. Then proceed with analyzing the project structure and implementing the missing features. Focus on the highest priority items first.
 `;
 
   return prompt;
