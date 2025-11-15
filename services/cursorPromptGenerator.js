@@ -35,29 +35,98 @@ Language: ${projectLanguage}
 
 ---
 
-## ⚡ QUICK START - DEPLOY IN 10 MINUTES
+## ⚠️ CRITICAL: REBRANDING FIRST - DO NOT SKIP THIS!
 
-### Step 1: Clone & Rebrand (2 minutes)
+**🚨 STOP! Before doing ANYTHING else, you MUST completely rebrand this project.**
+
+This is the MOST IMPORTANT step. Do NOT proceed with deployment until rebranding is 100% complete.
+
+### Step 1: Clone Project
 \`\`\`bash
 git clone ${projectUrl}
 cd ${projectName}
 \`\`\`
 
-**CRITICAL REBRANDING - Do this immediately:**
-1. Search/replace project name in: package.json, README.md, all config files
-2. Update UI text: titles, headers, footers, navigation
-3. Change logos, favicons, meta tags
-4. Remove all original author credits and copyright notices
-5. Update repository URLs and domain references
+---
 
-**Use find/replace across entire codebase for:**
+### Step 2: COMPLETE REBRANDING (MANDATORY - Do This FIRST!)
+
+**⚠️ YOU CANNOT DEPLOY UNTIL THIS IS DONE. This prevents legal issues and claims of using someone else's work.**
+
+#### 2.1: Search & Replace Project Names
+**Do this across the ENTIRE codebase:**
 - Original project name → Your project name
-- Original author names → Your name
-- Original repo URLs → Your repo URLs
+- Original author/creator names → Your name
+- Original repository URLs → Your repository URLs
+- Original domain names → Your domain names
+
+**Files to check:**
+- package.json, package-lock.json
+- README.md, README.txt, all documentation files
+- All config files (.env.example, config.js, etc.)
+- All source code files (search for project name in comments)
+
+#### 2.2: Update UI & Branding
+**Update ALL visible text:**
+- Page titles, headers, footers
+- Navigation menus
+- Button labels
+- Error messages
+- Loading text
+- About pages, help pages
+
+**Update brand assets:**
+- Logo files (replace with your logo)
+- Favicon (create new one)
+- Meta tags (title, description, og:image)
+- App icons (if mobile app)
+
+#### 2.3: Remove All Credits & Attribution
+**Remove or replace:**
+- Copyright notices
+- Author names in package.json
+- "Created by" or "Made by" text
+- Footer credits
+- Acknowledgments sections
+- License file (update if needed)
+- "About" page content
+- Original project links/references
+
+#### 2.4: Update Configuration
+**Change in all config files:**
+- App name in package.json
+- App name in manifest.json (if exists)
+- Environment variable names (if they reference original project)
+- Build configuration
+- Deployment settings
+
+#### 2.5: Verify Rebranding is Complete
+**Before proceeding, verify:**
+- [ ] No original project name appears anywhere
+- [ ] No original author names appear anywhere
+- [ ] No original repository URLs appear anywhere
+- [ ] All UI text has been updated
+- [ ] All logos/icons have been replaced
+- [ ] All credits have been removed
+- [ ] All documentation has been updated
+
+**Use these commands to verify:**
+\`\`\`bash
+# Search for original project name (replace "OriginalName" with actual name)
+grep -r "OriginalName" . --exclude-dir=node_modules --exclude-dir=.git
+
+# Search for original author name
+grep -r "OriginalAuthor" . --exclude-dir=node_modules --exclude-dir=.git
+
+# Search for original repo URL
+grep -r "github.com/original" . --exclude-dir=node_modules --exclude-dir=.git
+\`\`\`
+
+**ONLY proceed to Step 3 after rebranding is 100% complete!**
 
 ---
 
-### Step 2: Prepare for Render Deployment (3 minutes)
+### Step 3: Prepare for Render Deployment (3 minutes)
 
 ${needsBackend ? `#### Backend Setup (Web Service):
 1. **Create render.yaml** (if not exists):
@@ -112,7 +181,7 @@ services:
 
 ` : ''}---
 
-### Step 3: Deploy to Render (5 minutes)
+### Step 4: Deploy to Render (5 minutes)
 
 **Option A: Using Render Dashboard (Fastest)**
 1. Push your rebranded code to GitHub
@@ -203,34 +272,47 @@ ${needsDatabase ? '- [ ] PostgreSQL database created' : ''}
 
 ---
 
-## 💡 CURSOR AI - HELP ME DEPLOY FAST
+## 💡 CURSOR AI - HELP ME REBRAND & DEPLOY FAST
+
+**PRIORITY ORDER:**
+1. **REBRANDING (MUST DO FIRST)** - Help me identify and replace all original project references
+2. **DEPLOYMENT PREP** - Help me prepare for Render deployment
+3. **DEPLOY** - Help me deploy quickly
 
 Please help me:
 
-1. **Identify deployment blockers:**
+1. **REBRANDING ASSISTANCE (Priority #1 - Do This First!):**
+   - Identify ALL files containing original project name, author names, or credits
+   - Provide a comprehensive list of strings to search and replace
+   - Help me find all instances using grep/search commands
+   - Update UI components with new branding
+   - Verify no original project references remain
+   - **DO NOT proceed to deployment until rebranding is complete**
+
+2. **Identify deployment blockers:**
    - Check if PORT is configurable
    - Verify build/start commands
    - Identify missing environment variables
    - Check for hardcoded URLs or paths
 
-2. **Create render.yaml:**
+3. **Create render.yaml:**
    - Generate the correct render.yaml for this project
    - Include all required services
    - Set correct build and start commands
 
-3. **Fix deployment issues:**
+4. **Fix deployment issues:**
    - Update code to work with Render's environment
    - Fix any hardcoded values
    - Ensure database connections work
    - Verify static file serving
 
-4. **Optimize for Render:**
+5. **Optimize for Render:**
    - Suggest best practices for Render deployment
    - Optimize build times
    - Configure health checks
    - Set up proper logging
 
-**Goal: Get this deployed to Render as fast as possible. Focus on deployment, not feature development.**
+**REMEMBER: Rebranding is MANDATORY before deployment. Help me complete it first, then we'll deploy.**
 `;
 
   return prompt;
