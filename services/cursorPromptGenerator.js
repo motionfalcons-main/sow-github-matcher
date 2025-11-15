@@ -8,9 +8,9 @@ export function generateCursorPrompt(project, sowAnalysis, compatibilityData) {
   const safeCompatibilityData = compatibilityData || {};
   const safeSowAnalysis = sowAnalysis || {};
   
-  const gaps = safeCompatibilityData.missingFeatures || [];
-  const matches = safeCompatibilityData.matchingFeatures || [];
+  const renderServices = safeCompatibilityData.renderDeployment?.services || [];
   const renderCost = safeCompatibilityData.renderDeployment?.estimatedMonthlyCost || 'Unknown';
+  const renderReasoning = safeCompatibilityData.renderDeployment?.reasoning || '';
   
   // Safe project data
   const projectUrl = project.url || project.html_url || '#';
@@ -18,174 +18,222 @@ export function generateCursorPrompt(project, sowAnalysis, compatibilityData) {
   const projectStars = project.stars || project.stargazers_count || 0;
   const projectLanguage = project.language || 'Unknown';
   
-  const prompt = `# 🚀 PROJECT SETUP GUIDE
+  // Determine deployment type
+  const needsDatabase = renderServices.some(s => s.toLowerCase().includes('postgres') || s.toLowerCase().includes('database'));
+  const needsFrontend = renderServices.some(s => s.toLowerCase().includes('static') || s.toLowerCase().includes('frontend'));
+  const needsBackend = renderServices.some(s => s.toLowerCase().includes('web') || s.toLowerCase().includes('service'));
+  
+  const prompt = `# 🚀 FAST DEPLOYMENT GUIDE - RENDER.COM
 
 ## Project: ${projectName}
 Repository: ${projectUrl}
 Stars: ${projectStars} ⭐
 Language: ${projectLanguage}
 
----
-
-## 📋 CONTEXT
-I'm using this project as a boilerplate for a client project. Here are the requirements:
-
-**Client SOW Requirements:**
-${safeSowAnalysis.mainFeatures?.map(f => `- ${f}`).join('\n') || 'No features specified'}
-
-**Tech Stack Required:**
-${safeSowAnalysis.technologies?.join(', ') || 'Not specified'}
-
-**Project Type:** ${safeSowAnalysis.projectType || 'Not specified'}
-**Complexity:** ${safeSowAnalysis.complexity || 'Not specified'}
-**Timeline:** ${safeSowAnalysis.estimatedTimeline || 'Not specified'}
+**Estimated Monthly Cost:** ${renderCost}
+**Required Services:** ${renderServices.join(', ') || 'Web Service'}
 
 ---
 
-## 🎯 COMPATIBILITY ANALYSIS
-This boilerplate has a **${safeCompatibilityData.compatibilityScore || 0}/100 compatibility score** with my SOW.
+## ⚡ QUICK START - DEPLOY IN 10 MINUTES
 
-**What Already Exists:**
-${matches.map(m => `✅ ${m}`).join('\n') || '✅ No matching features identified'}
-
-**What Needs to Be Added:**
-${gaps.map(g => `❌ ${g}`).join('\n') || '❌ All features already present'}
-
-**Deployment Estimate:**
-💰 Render Cost: ${renderCost}/month
-${safeCompatibilityData.renderDeployment?.services?.map(s => `- ${s}`).join('\n') || ''}
-
----
-
-## 🔧 SETUP STEPS
-
-### Step 1: Clone and Analyze
+### Step 1: Clone & Rebrand (2 minutes)
 \`\`\`bash
 git clone ${projectUrl}
 cd ${projectName}
 \`\`\`
 
-### Step 2: REBRANDING - CRITICAL (Do This First!)
-**⚠️ IMPORTANT: You MUST completely rebrand this project to avoid any claims that this is the original project.**
+**CRITICAL REBRANDING - Do this immediately:**
+1. Search/replace project name in: package.json, README.md, all config files
+2. Update UI text: titles, headers, footers, navigation
+3. Change logos, favicons, meta tags
+4. Remove all original author credits and copyright notices
+5. Update repository URLs and domain references
 
-Before making any other changes, you need to:
+**Use find/replace across entire codebase for:**
+- Original project name → Your project name
+- Original author names → Your name
+- Original repo URLs → Your repo URLs
 
-1. **Change All UI Names and Branding:**
-   - Search and replace all project names, app names, and brand names throughout the codebase
-   - Update all visible text in the UI (titles, headers, footers, navigation)
-   - Change logo files, favicon, and any brand assets
-   - Update meta tags, page titles, and SEO content
-   - Modify package.json, README.md, and all documentation
+---
 
-2. **Remove/Replace All Credits:**
-   - Remove or replace all copyright notices
-   - Update author names and attribution
-   - Change "About" pages, footer credits, and acknowledgments
-   - Remove original project references and links
-   - Update license files if applicable
+### Step 2: Prepare for Render Deployment (3 minutes)
 
-3. **Update Configuration Files:**
-   - Change app names in package.json, manifest.json, config files
-   - Update environment variable names if they reference the original project
-   - Modify build configuration and deployment settings
-
-4. **Search for Original Project References:**
-   - Use find/replace across the entire codebase for:
-     - Original project name
-     - Original author/creator names
-     - Original repository URLs
-     - Original domain names
-     - Any other identifying information
-
-**This rebranding is essential to ensure the project is clearly your own work and not a copy of the original.**
-
-### Step 3: Environment Setup
-- Create a \`.env\` file
-- Add required environment variables
-- Check README for specific configuration needs
-
-### Step 4: Install Dependencies
-\`\`\`bash
-${projectLanguage === 'JavaScript' ? 'npm install' : 
-  projectLanguage === 'TypeScript' ? 'npm install' :
-  projectLanguage === 'Python' ? 'pip install -r requirements.txt' : 
-  projectLanguage === 'Java' ? 'mvn install' :
-  'See README for installation instructions'}
+${needsBackend ? `#### Backend Setup (Web Service):
+1. **Create render.yaml** (if not exists):
+\`\`\`yaml
+services:
+  - type: web
+    name: ${projectName}-backend
+    runtime: ${projectLanguage === 'Python' ? 'python' : 'node'}
+    buildCommand: ${projectLanguage === 'Python' ? 'pip install -r requirements.txt' : 'npm install'}
+    startCommand: ${projectLanguage === 'Python' ? 'gunicorn app:app' : 'node server.js'}
+    envVars:
+      - key: NODE_ENV
+        value: production
 \`\`\`
 
-### Step 5: Run Development Server
+2. **Ensure PORT is configurable:**
+   - Backend must use: \`process.env.PORT || 3000\` (Node) or \`os.environ.get('PORT', 5000)\` (Python)
+   - Render assigns port dynamically
+
+3. **Environment Variables:**
+   - Create .env file with all required variables
+   - Add them to Render dashboard after deployment
+
+` : ''}${needsFrontend ? `#### Frontend Setup (Static Site):
+1. **Build the frontend:**
 \`\`\`bash
-${projectLanguage === 'JavaScript' || projectLanguage === 'TypeScript' ? 'npm run dev' : 
-  projectLanguage === 'Python' ? 'python app.py' :
-  'See README for run instructions'}
+npm run build
 \`\`\`
 
----
+2. **Create render.yaml for static site:**
+\`\`\`yaml
+services:
+  - type: web
+    name: ${projectName}-frontend
+    runtime: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+\`\`\`
 
-## 🤖 AI ASSISTANCE NEEDED
+` : ''}${needsDatabase ? `#### Database Setup (PostgreSQL):
+1. **Create PostgreSQL service in Render:**
+   - Go to Render Dashboard → New → PostgreSQL
+   - Copy the connection string
 
-Please help me with the following:
+2. **Update environment variables:**
+   - Add DATABASE_URL to Render environment variables
+   - Update your code to use: \`process.env.DATABASE_URL\`
 
-1. **Rebranding Assistance (Priority #1)**
-   - Identify all files containing original project names, branding, or credits
-   - Provide a comprehensive list of strings to search and replace
-   - Help update UI components with new branding
-   - Ensure no original project references remain
+3. **Run migrations:**
+   - Add migration script to buildCommand or startCommand
+   - Or run manually after first deployment
 
-2. **Analyze Project Structure**
-   - Identify the main entry points
-   - Map out the folder structure
-   - Locate where I should add new features
+` : ''}---
 
-3. **Feature Implementation**
-   For each missing feature, provide:
-   - Where to add the code (specific files)
-   - What files to create/modify
-   - Dependencies to install
-   - Code examples and best practices
-   - Estimated implementation time
+### Step 3: Deploy to Render (5 minutes)
 
-4. **Integration Requirements**
-   ${safeSowAnalysis.technologies?.length > 0 ? `- How to integrate ${safeSowAnalysis.technologies.join(', ')}` : ''}
-   - Best practices for this tech stack
-   - Security considerations
-   - Performance optimization tips
+**Option A: Using Render Dashboard (Fastest)**
+1. Push your rebranded code to GitHub
+2. Go to [render.com](https://render.com) → New → Web Service
+3. Connect your GitHub repository
+4. Render will auto-detect settings
+5. Add environment variables in dashboard
+6. Click "Create Web Service"
+7. Wait 3-5 minutes for deployment
 
-5. **Deployment Preparation**
-   - Verify Render deployment compatibility
-   - Identify any deployment blockers
-   - Configure environment variables
-   - Database setup (if needed)
-
----
-
-## 📊 PRIORITY TASKS
-
-${generatePriorityTasks(gaps)}
-
----
-
-## 💡 RECOMMENDATIONS
-
-${safeCompatibilityData.recommendation || 'No specific recommendations provided'}
+**Option B: Using render.yaml (Recommended)**
+1. Create \`render.yaml\` in project root (see Step 2)
+2. Push to GitHub
+3. Go to Render → New → Blueprint
+4. Connect repository
+5. Render reads render.yaml automatically
+6. Deploy!
 
 ---
 
-**START WITH REBRANDING**: First, help me identify and replace all original project names, UI text, credits, and branding elements. Then proceed with analyzing the project structure and implementing the missing features. Focus on the highest priority items first.
+## 🎯 DEPLOYMENT CHECKLIST
+
+### Pre-Deployment:
+- [ ] Project rebranded (names, credits, logos)
+- [ ] PORT environment variable configured
+- [ ] All environment variables documented
+- [ ] Database connection string ready (if needed)
+- [ ] Build command works locally
+- [ ] Start command works locally
+
+### Render Configuration:
+- [ ] Web Service created
+${needsFrontend ? '- [ ] Static Site created (if separate frontend)' : ''}
+${needsDatabase ? '- [ ] PostgreSQL database created' : ''}
+- [ ] Environment variables added
+- [ ] Build command set correctly
+- [ ] Start command set correctly
+
+### Post-Deployment:
+- [ ] Health check endpoint working (\`/api/health\` or \`/\`)
+- [ ] Database migrations run (if needed)
+- [ ] Environment variables verified
+- [ ] Custom domain configured (optional)
+
+---
+
+## 🚀 FAST DEPLOYMENT TIPS
+
+1. **Use Render Blueprint (render.yaml)** - Fastest way, auto-configures everything
+2. **Start with Free Tier** - Test deployment, upgrade later if needed
+3. **Environment Variables** - Add them in Render dashboard, not in code
+4. **Auto-Deploy** - Enable auto-deploy from main branch
+5. **Health Checks** - Add \`/health\` endpoint for Render to monitor
+
+---
+
+## 🔧 COMMON ISSUES & FIXES
+
+**Build Fails:**
+- Check build logs in Render dashboard
+- Ensure all dependencies in package.json/requirements.txt
+- Verify Node/Python version matches
+
+**App Crashes:**
+- Check logs: Render Dashboard → Logs
+- Verify PORT is set correctly
+- Check environment variables are set
+
+**Database Connection Fails:**
+- Verify DATABASE_URL is set in Render
+- Check database is running (not paused)
+- Ensure connection string format is correct
+
+**Static Files Not Loading:**
+- Verify staticPublishPath points to build output
+- Check build command creates dist/ folder
+- Ensure base URL is configured correctly
+
+---
+
+## 📝 NEXT STEPS AFTER DEPLOYMENT
+
+1. **Test the deployed app** - Visit the Render URL
+2. **Set up custom domain** (optional) - Render Dashboard → Settings
+3. **Monitor logs** - Check for errors in Render dashboard
+4. **Set up auto-deploy** - Connect GitHub branch
+5. **Configure backups** - For database (if applicable)
+
+---
+
+## 💡 CURSOR AI - HELP ME DEPLOY FAST
+
+Please help me:
+
+1. **Identify deployment blockers:**
+   - Check if PORT is configurable
+   - Verify build/start commands
+   - Identify missing environment variables
+   - Check for hardcoded URLs or paths
+
+2. **Create render.yaml:**
+   - Generate the correct render.yaml for this project
+   - Include all required services
+   - Set correct build and start commands
+
+3. **Fix deployment issues:**
+   - Update code to work with Render's environment
+   - Fix any hardcoded values
+   - Ensure database connections work
+   - Verify static file serving
+
+4. **Optimize for Render:**
+   - Suggest best practices for Render deployment
+   - Optimize build times
+   - Configure health checks
+   - Set up proper logging
+
+**Goal: Get this deployed to Render as fast as possible. Focus on deployment, not feature development.**
 `;
 
   return prompt;
-}
-
-function generatePriorityTasks(gaps) {
-  if (!gaps || gaps.length === 0) {
-    return '✅ No additional features needed - project is ready to use!';
-  }
-  
-  return gaps.map((gap, index) => {
-    const priority = index < 2 ? '🔴 HIGH' : index < 4 ? '🟡 MEDIUM' : '🟢 LOW';
-    return `${priority}: Implement "${gap}"`;
-  }).join('\n');
 }
 
 export function generateQuickPrompt(project) {
