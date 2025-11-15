@@ -29,6 +29,7 @@ const SOWMatcher = () => {
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [showCollections, setShowCollections] = useState(false);
   const [shouldCancel, setShouldCancel] = useState(false);
+  const [showSimpleRenderOnly, setShowSimpleRenderOnly] = useState(false);
 
   // Load saved provider preference
   useEffect(() => {
@@ -141,6 +142,35 @@ const SOWMatcher = () => {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  // Check if project can be deployed with only Web Service, Frontend, and PostgreSQL
+  const isSimpleRenderDeployable = (project) => {
+    if (!project.comparison || !project.comparison.renderDeployment) {
+      return false; // No deployment info, can't determine
+    }
+
+    const services = project.comparison.renderDeployment.services || [];
+    
+    // Allowed services: Web Service, Frontend (Static Site), PostgreSQL
+    const allowedServices = [
+      'Web Service',
+      'Static Site',
+      'Frontend',
+      'PostgreSQL',
+      'Postgres'
+    ];
+
+    // Check if all services are in the allowed list (case-insensitive)
+    const normalizedServices = services.map(s => s.toLowerCase());
+    const normalizedAllowed = allowedServices.map(s => s.toLowerCase());
+    
+    const hasOnlyAllowedServices = normalizedServices.every(service => 
+      normalizedAllowed.some(allowed => service.includes(allowed.toLowerCase()))
+    );
+
+    // Also check that we don't have too many services (should be max 3: Web, Frontend, PostgreSQL)
+    return hasOnlyAllowedServices && services.length <= 3;
   };
 
   // GitHub API Functions - Now using backend proxy
@@ -1237,10 +1267,40 @@ Budget: $15,000`;
               </div>
             )}
             
+            {/* Filter: Simple Render Deployment Only */}
+            {githubProjects.length > 0 && !isSearchingGitHub && !isFetchingReadmes && (
+              <div className="mb-6 flex items-center justify-between bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <div className="flex items-center space-x-4">
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={showSimpleRenderOnly}
+                      onChange={(e) => setShowSimpleRenderOnly(e.target.checked)}
+                      className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                    />
+                    <span className="ml-2 text-gray-700 font-medium">
+                      Show only projects deployable with Web Service + Frontend + PostgreSQL
+                    </span>
+                  </label>
+                </div>
+                <div className="text-sm text-gray-500">
+                  {showSimpleRenderOnly 
+                    ? `${githubProjects.filter(p => isSimpleRenderDeployable(p)).length} projects match`
+                    : `${githubProjects.length} total projects`
+                  }
+                </div>
+              </div>
+            )}
+
             {/* Projects Grid */}
             {githubProjects.length > 0 && !isSearchingGitHub && !isFetchingReadmes && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {githubProjects.map((project) => {
+                {githubProjects
+                  .filter(project => {
+                    if (!showSimpleRenderOnly) return true;
+                    return isSimpleRenderDeployable(project);
+                  })
+                  .map((project) => {
                   const hasComparison = project.comparison;
                   const score = hasComparison ? project.comparison.compatibilityScore : null;
                   const isHighMatch = score >= 70;
@@ -1394,9 +1454,24 @@ Budget: $15,000`;
                             </div>
                           )}
                           
+                          {/* Simple Render Badge */}
+                          {isSimpleRenderDeployable(project) && (
+                            <div className="bg-green-50 border border-green-300 rounded-lg p-2 mb-2">
+                              <div className="flex items-center text-green-700">
+                                <CheckCircle className="w-4 h-4 mr-2" />
+                                <span className="text-xs font-bold">Simple Render Deployment</span>
+                              </div>
+                              <p className="text-xs text-green-600 mt-1">Web Service + Frontend + PostgreSQL only</p>
+                            </div>
+                          )}
+
                           {/* Render Deployment Cost */}
                           {project.comparison.renderDeployment && (
-                            <div className="p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                            <div className={`p-2 border rounded-lg ${
+                              isSimpleRenderDeployable(project) 
+                                ? 'bg-green-50 border-green-200' 
+                                : 'bg-blue-50 border-blue-200'
+                            }`}>
                               <div className="flex items-center justify-between mb-1">
                                 <div className="flex items-center">
                                   <DollarSign className="w-3 h-3 text-blue-600 mr-1" />
